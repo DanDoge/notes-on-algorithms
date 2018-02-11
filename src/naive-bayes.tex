@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on naive bayes}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/01/26}
+
+\title{Notes on perceptron}
+\date{2018-01-26}
+\author{DanDoge}
+
+\begin{document}
+\section{introduction}
+  \paragraph{} \textit{Naive Bayes} is a simple technique for constructing classifiers, which assumes that the value of a particular feature is independent of the value of any other feature, thus its naivity.
+\section{probabilistic model}
+  \paragraph{} using Bayesian probability, \"naive\" assumption we have
+  \begin{equation}
+    p(C_k|x_1,...,x_n) = \frac{p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k)}{\sum_k p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k)},
+  \end{equation}
+  so we have our naive Bayesian classifier:
+  \begin{equation}
+    y = f(x) = argmax_{c_k}\frac{p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k)}{\sum_k p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k)},
+  \end{equation}
+  notice that the $\sum_k p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k)$ is same for all $c_k$, we have:
+  \begin{equation}
+    y = argmax_{c_k}p(Y = C_k)\prod_j p(X^{(j)} = x^{(j)}|Y = c_k).
+  \end{equation}
+  \paragraph{} we choose our loss function as:
+  \begin{equation}
+    L(Y, f(X)) =
+    \begin{cases}
+      1,  & Y \neq f(X) \\
+      0,  & Y = f(X)
+    \end{cases}
+  \end{equation}
+  thus, from our goal to minimize the expectation risk, we get our principle to maximize posterior probability.
+\section{parameter estimation}
+  \paragraph{} a simple estimation is:
+  \begin{equation}
+    p(Y = c_k) = \frac{\sum_{i = 1}^{N}I(y_i = c_k)}{N},\ k = 1,...,K,
+  \end{equation}
+  \begin{equation}
+    p(X^{(j)} = a_{jl}|Y = c_k) = \frac{\sum_{i = 1}^N I(x_i^{(j)} = a_{jl},\ y_i = c_k)}{\sum_{i = 1}^{N}I(y_i = c_k)}
+  \end{equation}
+  but we see, sometimes the probability comes zero just because we have not seen this class in our training set, so another method (\textit{Laplace smoothing}) is:
+  \begin{equation}
+    p(Y = c_k) = \frac{\sum_{i = 1}^{N}I(y_i = c_k) + \lambda}{N + \lambda}
+  \end{equation}
+  \begin{equation}
+    p(X^{(j)} = a_{jl}|Y = c_k) = \frac{\sum_{i = 1}^N I(x_i^{(j)} = a_{jl},\ y_i = c_k) + \lambda}{\sum_{i = 1}^{N}I(y_i = c_k) + S_j \lambda}.
+  \end{equation}
+\end{document}

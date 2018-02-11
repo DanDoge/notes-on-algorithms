@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on perceptron}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/01/18}
+
+\title{Notes on perceptron}
+\date{2018-01-18}
+\author{DanDoge}
+
+\begin{document}
+
+\section{defination}
+  \paragraph{}
+    Perceptron is one of supervised learning algorithms which learns a  binary classifier based on a linear predictor function: a function that maps its input $\vec x$ to an out put value
+  \begin{equation*}
+    f(x) = sgn(\vec w * \vec x  + b)
+  \end{equation*}
+  where $\vec w$ is a vector of real-valued weights, and b is the \textit{bias}, in addition, $\vec w * \vec x + b = 0$ is called decision boundary. This algorithm will not terminate if the training set is not linearly separable, that is to say, there exists at least one line which separates positive dots and negative dots,  as we will see in next part. One example of this is the Boolean exclusive-or problem.
+
+\section{algorithm}
+  Our goal is to minimize the sum of distance of all dots that are misclassified:
+  \begin{equation*}
+    \textit{L}(\vec x) = -\sum_{x_i \in M} y_i(\vec w * \vec x_i + b)
+  \end{equation*}
+  Note that we omitted a constant $\frac{1}{||\vec w||_2}$ for we know eventually $\textit{L}(\vec x)$ will be zero if the training set is linearly separable. And then we know whether a stochastic gradient descent method or Lagrange dual method could be appllied to fit these perameters.
+  \paragraph{}
+  \begin{algorithm}
+    \caption{stochastic method}
+    \hspace*{0.02in}{\bf Input:} training set, learning rate $\eta$
+    \hspace*{0.02in}{\bf Output:} $\vec w, b$
+    \begin{algorithmic}[1]
+      \State $\vec w \gets \vec w_0$
+      \State $b \gets b_0$
+      \While{exists $x_i$ st. $f(x_i) \neq y_i$}
+        \State $\vec w \gets \vec w + \eta y_ix_i$
+        \State $b \gets b + \eta y_i$
+      \EndWhile
+    \end{algorithmic}
+  \end{algorithm}
+  \begin{algorithm}
+    \caption{Lagrange dual method}
+    \hspace*{0.02in}{\bf Input:} training set, learning rate $\eta$
+    \hspace*{0.02in}{\bf Output:} $\vec w, b$
+    \begin{algorithmic}[1]
+      \State $\vec \alpha \gets \vec \alpha_0$
+      \State $b \gets b_0$
+      \While{exists$x_i$ st. $f(x_i) \neq y_i$}
+        \State $\vec \alpha \gets \vec \alpha + \eta$
+        \State $b \gets b + \eta y_i$
+      \EndWhile
+    \end{algorithmic}
+  \end{algorithm}
+  \paragraph{}
+  In fact, I do not think this could serve as a typical example of Lagrange duality. First, if we define $\alpha_i$ to be the times we misclassified $x_i$, then it is not differentiatable, and again, we do not get rid of b, which equals $\sum_{i = 1}^{N}$ $\alpha_i$ * $y_i$.
+
+\section{convergency}
+  \begin{theorem}
+    Suppose our training set is linearly separable, so that:
+    \newline
+      there exists one hyperplain $w_{opt}$ that corrcetly separates our data set and satisfies $\|w_{opt}\|_2 = 1$, and that there exists $\gamma > 0$ that all distance to this hyperplain is greater than $\gamma$
+    \newline
+      the time that we misclassify is less than (max$\|$
+          $\left(
+            \begin{array}{c}
+              x_i\\
+              1
+            \end{array}
+          \right)$
+      $\|)^2 / \gamma^2$
+    \end{theorem}
+    \begin{proof}
+      t.b.c.
+    \end{proof}
+\end{document}

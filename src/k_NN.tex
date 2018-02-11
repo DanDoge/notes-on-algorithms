@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on k-NN}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/01/20}
+
+\title{Notes on k-NN}
+\date{2018-01-20}
+\author{DanDoge}
+
+\begin{document}
+\section{defination}
+  \paragraph{}
+    k-nearest neighbors algorithm is a non-parametric method for classification and regerssion.  In k-NN classification, the output is a class membership classified by a majority vote of its neighbors, especially, if k == 1 then the object is simply assigned to the classs of its nearest neighbor. In k-NN regerssion, the out put value is the average of the values of its k nearest neighbors.
+
+\section{algorithm}
+  \begin{algorithm}
+    \caption{k-NN algorithm}
+    \hspace*{0.02in}{\bf Input:} $\vec x$, training set \textit{T} = ${(x_1, y_1), ..., (x_n, y_n)}$ , where $\vec x_i \in \textit{X}$ being eigenvectors and $y_i \in \textit{Y}$ = $\{c_1, c_2, ..., c_k\}$ being classes
+    \newline{}
+    \hspace*{0.02in}{\bf Output:} class y that $\vec x$ belongs to.
+    \begin{algorithmic}[1]
+      \State find k nearest neighbors using metric given, using $N_k(x)$ to denote these dots
+      \State use dicision rule, e.g. majority rule, to dicide the class of x
+    \end{algorithmic}
+  \end{algorithm}
+
+\section{metric}
+  \paragraph{}
+    usually we use Euclidean distance, $L_2(x_i, x_j) = (\sum_{l = 1}^{n}(x_i^{(l)} - x_j^{(l)})^{2})^{1/2}$, more generally, $\textit{L}_p$ distance is $L_p(x_i, x_j) = (\sum_{l = 1}^{n}(x_i^{(l)} - x_j^{(l)})^{p})^{1/p}$, If k == 1, it is called Manhattan distance, and when k == $\inf$, $L_{\inf}(x_i, x_j) = max_{l} \|x_i^{(l)} - x_j^{(l)}\|$
+
+\section{weighted nearest neighbor classifier}
+  \paragraph{}
+    the k-nearest neighbor classifier could be viewed as assigning the k nearest neighbors a weight of 1/k and all others 0 weight, we can generlize it to weighted nearest neighbor classifiers with the \textit{i}th nearest neighbor a weight $\textit{w}_{ni}$, and $\sum_{i = 1}^{n} \textit{w}_{ni}$ = 1
+
+\section{CNN for data reduction}
+  \paragraph{}
+    condensed nearest neighbor is an algorithm designed to reduce the data set for k-NN classification.
+    \begin{algorithm}
+      \caption{CNN for data reduction}
+      \hspace*{0.02in}{\bf Input:} training set \textit{X}
+      \newline{}
+      \hspace*{0.02in}{\bf Output:} the set of prototypes \textit{U}
+      \begin{algorithmic}[1]
+        \State scan all elements of \textit{X}, looking for an element whose nearest element in \textit{U} has a different label than x.
+        \State remove x from \textit{X}, and add it to \textit{U}.
+        \State repeat till no more prototypes are added to \textit{U}.
+      \end{algorithmic}
+    \end{algorithm}
+    \newline{}
+    and use \textit{U} instead of \textit{X} for classification.
+\end{document}
