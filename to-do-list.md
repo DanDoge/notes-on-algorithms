@@ -4,7 +4,7 @@
 
 ######logistic regression
 
-######RSA
+######Rabin-Karp
 
 ######Miller-Rabin
 

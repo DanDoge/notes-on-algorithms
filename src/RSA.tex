@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on RSA}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/02/12}
+
+\title{Notes on RSA}
+\date{2018-02-12}
+\author{DanDoge}
+
+\begin{document}
+\section{public-key cryptosystems}
+  \paragraph{} each participant has a \textit{public key} and a \textit{secret key}. these keys specify one-to-one functions from $\mathcal{D}$ to itself. for any participant, the public adn secret keys are a \"matched pair\", $i.e.$
+  \begin{equation}
+    M\ =\ S_A(P_A(M)),
+  \end{equation}
+  for any $M \in \mathcal{D}$. we require one must keep his secret key secret, and no one is able to compute the secret key function in any practical amount of time, even one can compute the public key function efficiently. the scenario for sending a message is as follows:(suppose A wants to send a message to B)
+  \begin{itemize}
+    \item A obtains B's public key $P_B$
+    \item A computes the \textit{ciphertext} $C = P_B(M)$, and send $C$ to B
+    \item B applies his secret key $S_B$ to retrieve the original message $S_B(C) = M$
+  \end{itemize}
+  similarly, we can implement digital signatures:
+  \begin{itemize}
+    \item B computes his \textit{digital signature} $\sigma$ = $S_B{M^{'}}$
+    \item B sends pair $(M^{'}, \sigma)$ to A
+    \item A can verify that this message is from B by verify the equation $M^{'} = P_A(\sigma)$
+  \end{itemize}
+
+\section{the RSA cryptosystem}
+  \paragraph{} one creates one's public and secret keys with the following procedure:
+  \begin{itemize}
+    \item selete two large prime numbers $p$ and $q$ at random
+    \item conpute $n = pq$
+    \item selete a small odd integer $e$ that is prime to $\phi(n)$ = $(p - 1)(q - 1)$
+    \item compute $d$ as the inverse of $e$, modulo $\phi(n)$
+    \item publish $P = (e, n)$ as the $\mathbf{RSA public key}$.
+    \item keep pair $S = (d, n)$ as the $\mathbf{RSA secret key}$.
+  \end{itemize}
+  and the function that public key specifies is $P(M) = M^e$ mod $n$, and secret key, $S(C) = C^d$ mod $n$. the correctness of RSA is proved from Fremat's Theorem, and the security of RSA rests on the difficulty of factoring large integers, although this is not proven.
+\end{document}
