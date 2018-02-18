@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on Miller-Rabin}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/02/18}
+
+\title{Notes on Miller-Rabin}
+\date{2018-02-18}
+\author{DanDoge}
+
+\begin{document}
+\section{density of prime numbers}
+  \paragraph{prime number theorem} $\lim_{n \to \infty} \frac{\phi(n)}{n / \ln n} = 1$.
+  \paragraph{} one simple approach to the problem of testing for primality is $\mathbf{trial division}$. we tyr dividing $n$ by each integer 2,3,...,[$\sqrt{n}$]. this works well only when $n$ is very small or happens to have a small prime factor.
+\section{pseudoprimality testing}
+  \paragraph{} let $\mathcal{Z}_n^+$ denote the nonzero elements of $\mathcal{Z}_n$, we say that $n$ is a \textit{base-a pseudoprime} if $n$ is composite and
+  \begin{equation}
+    a^{n - 1} \equiv 1\ (mod\ n).
+  \end{equation}
+  surprizingly, the conerse of Fermat's theorem $almost$ holds.
+  \begin{algorithm}
+    \caption{pseudoprime(n)}
+    \begin{algorithmic}[1]
+      \If{$2^{n - 1} \not\equiv 1\ (mod\ n).$}
+      \State \Return{composite}
+      \Else return prime
+      \EndIf
+    \end{algorithmic}
+  \end{algorithm}
+  \paragraph{} surprizingly, it rarely err. actually the error rate on a randomly chosen $\beta$-bit number goes to zero as $\beta \to \infty$. we cannot entirely eliminate all errors by simply checking for a second base number, because there exist composite integers $n$, \textit{carmichael numbers}, that safisty equation for all $a \in \mathcal{Z}_n^*$.
+\section{the miller-rabin randomized primality test}
+  \paragraph{} let $n - 1 = 2^tu$ where $t \geq 1$ and $u$ is odd, therefore $a^{n - 1} \equiv (a^u)^{2^t}$
+  \begin{algorithm}
+    \caption{witness($a, n$)}
+    \begin{algorithmic}[1]
+      \State let $t$ and $u$ as defined above
+      \State $x_0$ = $a^u$ mod $n$
+      \For{$i = 1 \to t$}
+        \State $x_i = x_{i - 1}^2$ mod $n$
+        \If{$x_i == 1$ and $x_{i - 1} \neq 1$ and $x_{i - 1} \neq n - 1$}
+          \State \Return{true}
+        \EndIf
+      \EndFor
+      \If{$x_t \neq 1$}
+        \State \Return{true}
+      \EndIf
+      \State \Return{false}
+    \end{algorithmic}
+  \end{algorithm}
+  \paragraph{} we detect whether a nontrival square root of 1 is discovered, We now examine the Miller-Rabin primality test based on the use of WITNESS. Again, we assume that n is an odd integer greater than 2
+  \begin{algorithm}
+    \caption{miller-rabin($n, s$)}
+    \begin{algorithmic}[1]
+      \For{$j = 1 \to s$}
+        \State $a = $ random(1, $n$ - 1)
+        \If{witness($a, n$)}
+          \State \Return{composite}
+        \EndIf
+      \EndFor
+      \State \Return{prime}
+    \end{algorithmic}
+  \end{algorithm}
+\section{error rate of miller-rabin primality test}
+  \paragraph{theorem} if $n$ is an odd composite number, then the number of witnesses to the compositeness of n is at least $(n - 1) / 2$.
+  \paragraph{theorem} the probability that miller-rabin$(n, s)$ errs is at most $2^{-s}$.
+  \paragraph{} by applying bayesian theorem, we can estimate the error rate more percisely.
+\end{document}

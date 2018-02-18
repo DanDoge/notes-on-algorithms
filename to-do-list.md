@@ -6,8 +6,6 @@
 
 ######Rabin-Karp
 
-######Miller-Rabin
-
 ######SVM
 
 ######EM
