@@ -1,0 +1,94 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Notes on solving recurrence equations}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/02/26}
+
+\title{Notes on solving recurrence equations}
+\date{2018-02-26}
+\author{DanDoge}
+
+\begin{document}
+\section{definition}
+  \paragraph{}
+    if the $n$-th term of a sequence can be expressed as a function of previous terms
+    \begin{equation}
+      x_n = F(x_{n - k}, ..., x_{n - 1}) + g_n,\ n > k,
+    \end{equation}
+    then this equation is called a $k$-th order \textit{recurrence relation}, the values $x_1, ..., x_k$ are called \textit{initial conditions}, if $g_n \equiv 0$, the recurrence equation is called \textit{homogeneous}, otherwise it's called \textit{non-homogeneous}
+\section{solving first order recurrences}
+  \paragraph{}
+    this class of recurrences can be solved by \textit{iteration}, which is, i think, taught in high school, thus i omit it.
+\section{solving second order recurrences}
+  \paragraph{}
+    this class of recurrences can be solved using \textit{a characterstic equation}, when we have constant coefficients.
+  \paragraph{example:Fibonacci numbers}
+    the Fibonacci sequence is defined by:
+    \begin{equation}
+      a_n = a_{n - 1} + a_{n - 2}, a_0 = 0, a_1 = 1
+    \end{equation}
+    we obtain a polynomial equation, which is called \textit{a characterstic equation}
+    \begin{equation}
+      \lambda^2 = \lambda + 1
+    \end{equation}
+    which has two roots, $\lambda_1 = \frac{1 - \sqrt{5}}{2}$ and $\lambda_2 = \frac{1 + \sqrt{5}}{2}$, therefore, $\lambda_1^n$ and $\lambda_2^n$ and their linear combination $c_1\lambda_1^n + c_2\lambda_2^n$ are solutions to this recurrence, then, from initia conditions, we find $c_1$ and $c_2$.
+\section{multiple roots}
+  \paragraph{}
+    what if some of the roots of the characterstic equation are the same?
+  \paragraph{example}
+  \begin{equation}
+    a_n = 2a_{n - 1} - a_{n - 2}
+  \end{equation}
+  the characterstic equation has two identical roots $\lambda_1 = \lambda_2 = 1$, so the first solution is $1^n$, to get the second solution, we consider a new equation
+  \begin{equation}
+    b_n = (2 + \epsilon)b_{n - 1} - (1 + \epsilon)b_{n - 2}
+  \end{equation},
+  if $\epsilon \to 0$, then $b_n$ approaches $a_n$, the characterstic equation for $b_n$ has two roots $1, 1 + \epsilon$, and $c_1 = 1 - \frac{1}{\epsilon}, c_2 = \frac{1}{\epsilon}$,
+  thus $b_n = (1 - \frac{1}{\epsilon} + \frac{1}{\epsilon}*(1 + \epsilon)^n)$, consider when $\epsilon \to 0$, we have $a_n = 1 + n$.
+  \paragraph{Theorom}
+    let $\lambda$ be a root of a multiplicity p of the characterstic equation, then $\lambda^n, n\lambda^n, ..., n^{p - 1}\lambda^n$ are all solutions to the recurrence.
+\section{non-homogeneous equations}
+  \paragraph{Theorom}
+    a recurrence of the form
+    \begin{equation}
+      x_n + c_1x_{n - 1} + ..+c_kx_{n - k} = b^nP(n)
+    \end{equation}
+    where $c_k$ and $b$ are all constants, and $P(n)$ is a polynomial of the order $d$ can be transformed into the characterstic equation
+    \begin{equation}
+      (r^k + c_1r^{k - 1} + ... + c_k)(r - b)^{d + 1} = 0
+    \end{equation}
+\section{generating functions}
+  \paragraph{example}
+    we are going to derive a generating function for this sequence
+    \begin{equation}
+      a_n - 3a_{n - 1} + 2a_{n - 2} = 0, a_0 = 0, a_1 = 1
+    \end{equation}
+    first, we define
+    \begin{equation}
+      f(x) = \sum_{k = 0}^\infty a_kx^k
+    \end{equation}
+    then we have
+    \begin{equation}
+      f(x) - 3xf(x) + 2x^2f(x) =a_0 + a_1x - 3a_0x = x
+    \end{equation}
+    thus,
+    \begin{equation}
+      f(x) = \frac{1}{1 - 2x} - \frac{1}{1 - x}
+    \end{equation}
+    by means of a geometric series, we have
+    \begin{equation}
+      f(x) = (2 - 1)x + (2^2 - 1)x^2 + ...
+    \end{equation}
+\end{document}
