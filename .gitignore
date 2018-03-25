@@ -1,3 +1,7 @@
+view selection/paper/
+view selection/idea/
+view selection/EXP_MODELS_LR
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
