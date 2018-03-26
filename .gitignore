@@ -1,6 +1,7 @@
 view selection/paper/
 view selection/idea/
 view selection/EXP_MODELS_LR
+view selection/src/three.js-dev
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
