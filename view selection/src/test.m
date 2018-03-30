@@ -4,18 +4,29 @@ function [] = test()
 
     FV.vertice = obj.vertices;
 
-    FV.faces = obj.objects(4).data.vertices;
+    FV.faces = obj.objects(length(obj.objects)).data.vertices;
 
     figure, patch(FV, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hidden on;
 
-    [rn, ~] = get_points();
-    
-    for ii = 1 : length(rn)
-        light('color', [0.5, 0.5, 0.5], 'style', 'local', 'position',rn(ii, :));
-        view(rn(ii, :));
-        saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' num2str(ii,'%04d') '.png']);
-        
+    cnt = 1;
+    for x = -1:0.4:1
+        for y = -1:0.4:1
+            for z = -1:0.4:1
+                view([x, y, z]);
+                saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' num2str(cnt) '.png']);
+                cnt = cnt + 1;
+            end
+        end
     end
+
+    %[rn, ~] = get_points();
+
+    %for ii = 1 : length(rn)
+    %    light('color', [0.5, 0.5, 0.5], 'style', 'local', 'position',rn(ii, :));
+    %    view(rn(ii, :));
+    %    saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' num2str(ii,'%04d') '.png']);
+
+    %end
 end
 
 function [rn, vn] = get_points()
@@ -31,14 +42,6 @@ function [rn, vn] = get_points()
          r0 = rn;
          v0 = vn;
     end
-
-    %plot3(rn(:, 1), rn(:, 2), rn(:, 3), '.'); hold on;
-    %[xx,yy,zz] = sphere(50);
-    %h2 = surf(xx, yy, zz);
-    %set(h2, 'edgecolor', 'none', 'facecolor', 'r', 'facealpha', 0.7);
-    %axis equal;
-    %axis([-1 1 -1 1 -1 1]);
-    %hold off;
 
  end
 
