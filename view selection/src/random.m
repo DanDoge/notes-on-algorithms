@@ -12,7 +12,7 @@ function [] = random()
         r0 = rn;
         v0 = vn;
         hold on, scatter3(rn(:, 1), rn(:, 2), rn(:, 3), 'k'), axis equal, axis off, axis image, hold off;
-        %figure, patch(rn, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hidden on;
+        % figure, patch(rn, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hidden on;
     end
 
     %plot3(rn(:, 1), rn(:, 2), rn(:, 3), '.'); hold on;
