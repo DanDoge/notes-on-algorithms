@@ -16,6 +16,20 @@
 
 之后把不同尺度的估计值做差
 
-需要supperession(**看看这个**)
+需要suppression Itti, et al., 是suppression让它消除了纹理造成的点, 把每一个图归一化, 再乘上显著度的差值的平方, 求和
 
-明早起来看salient simplification
+salient simplification
+
+mash simplification有用error metric和simplification算子.
+
+修改了Qslim算法
+
+这里提到好多方法...
+
+化简的方法不断寻找最小的两个点合并(huffman-like)
+
+用分段线性函数去放大saliency map, 保留最突出的点
+
+选择视角的方法类似, 也是选一个让看到的东西熵最大的角度
+
+居然用的是梯度下降!!!
