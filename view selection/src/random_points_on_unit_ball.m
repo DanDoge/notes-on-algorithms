@@ -1,4 +1,4 @@
-function [] = random()
+function [] = random_points_on_unit_ball()
     N = 1024;
     a = rand(N, 1) * 2 * pi;
     b = asin(rand(N, 1) * 2 - 1);

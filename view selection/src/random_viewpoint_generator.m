@@ -1,4 +1,4 @@
-function [] = test()
+function [] = random_viewpoint_generator()
 
     obj = read_wobj('C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\desk_chair_LR.obj');
 
