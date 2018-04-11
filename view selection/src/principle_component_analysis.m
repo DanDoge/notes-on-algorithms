@@ -10,10 +10,13 @@ function [] = principle_component_analysis()
 
     [COEFF ,~ ,~] = pca(FV.vertice);
 
-    % tmp is the prin. axis
-    tmp = COEFF(:, 1);
+    % prime is the prin. axis, what about choose the prin. plane?
+    prime = COEFF(:, 1);
+    second = COEFF(:, 2);
 
     % B is the null space of tmp
-    B = null(tmp');
+    B = null([prime'; second']);
+    view(B);
+
 
 end

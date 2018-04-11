@@ -8,42 +8,32 @@ function [] = test()
             sub_path(i).isdir)
             continue;
         end
-        naive_entropy(sub_path(i).name);
+        principle_component_analysis(i, sub_path(i).name);
     end
 end
 
-function [] = naive_entropy(model_name)
+function [] = principle_component_analysis(idx, obj_name)
 
-    max_res = 0;
-    max_path = 'nan';
-    max_idx = 64;
+    [vertices, faces] = obj__read(['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\' obj_name]);
 
-    for i = 1:max_idx
-        img_path = ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' model_name '\' num2str(i) '.png'];
-        img = imread(img_path);
-        img_gray = rgb2gray(img);
-        [row, col] = size(img_gray);
+    FV.vertice = (vertices)';
 
-        cnt = zeros(256);
-        for ii = 1: row
-            for jj = 1:col
-                cnt(img_gray(ii, jj) + 1) = cnt(img_gray(ii, jj) + 1) + 1;
-            end
-        end
+    FV.faces = (faces)';
 
-        res = 0;
-        for ii = 1:256
-            cnt(ii) = cnt(ii) / (row * col);
-            if cnt(ii) ~= 0.0
-                res = res - cnt(ii) * log(cnt(ii)) / log(2.0);
-            end
-        end
-        if res > max_res
-            max_res = res;
-            max_path = img_path;
-            fprintf('%d\n', i);
-        end
+    if idx == 1
+        figure, patch(FV, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hidden on;
+    else
+        clf, patch(FV, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hidden on;
     end
-    copyfile(max_path, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' model_name  '\best_naive_entropy.png']);
 
+    [COEFF ,~ ,~] = pca(FV.vertice);
+
+    % prime is the prin. axis, what about choose the prin. plane?
+    prime = COEFF(:, 1);
+    second = COEFF(:, 2);
+
+    % B is the null space of tmp
+    B = null([prime'; second']);
+    view(B);
+    saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' obj_name '\best_pca.png']);
 end
