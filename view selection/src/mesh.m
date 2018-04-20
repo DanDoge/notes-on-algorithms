@@ -3,12 +3,16 @@
 % not tested
 
 function [] = mesh()
-    [vertices, faces] = obj__read('C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\airplane3_LR.obj');
+    [vertices, faces] = obj__read('C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\guitar_LR.obj');
     vertex_size = length(vertices);
     face_size = length(faces);
     vertices = vertices';
     faces = faces';
     fprintf('%d vertices, %d faces loaded\n', vertex_size, face_size);
+
+    FV.faces = faces;
+    FV.vertices = vertices;
+    figure, patch(FV, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hold on;
 
     min_x = 32767; min_y = 32767; min_z = 32767;
     max_x = -32767; max_y = -32767; max_z = -32767;
@@ -36,7 +40,11 @@ function [] = mesh()
             normals(faces(i, j), :) = normals(faces(i, j), :) + cross_prod;
         end
     end
+
     for i = 1 : vertex_size
+        if norm(normals(i, :)) == 0
+            continue;
+        end
         normals(i, :) = normals(i, :) / norm(normals(i, :));
     end
 
@@ -74,9 +82,12 @@ function [] = mesh()
     end
 
     for i = 1 : vertex_size
+        if vertex_area(i) == 0
+            continue;
+        end
         shape_operators(:, :, i) = shape_operators(:, :, i) / vertex_area(i);
     end
-    disp(shape_operators);
+    %disp(shape_operators);
 
     mean_curvature = zeros(vertex_size, 1);
     max_mean_curvature = 0.0;
@@ -108,14 +119,113 @@ function [] = mesh()
     for i = 1 : vertex_size
         [R, G, B] = mean_curvature_to_rgb(mean_curvature(i), min_mean_curvature, max_mean_curvature);
         if isreal(R) && ~isnan(R)
+            %continue;
             fprintf('%d, %d\n', i, R);
             if R >= 1.0
-                R = 1.0
+                R = 1.0;
             end
             plot3(vertices(i, 1), vertices(i, 2), vertices(i, 3), '.', 'color', [R, G, B]);
-            hold on, axis equal, axis off, axis image, hidden on;
+            hold on;
+        else
+            fprintf('%d \n', i);
         end
     end
+
+    first = -1 * ones(vertex_size, 1);
+    next = zeros(6 * vertex_size, 1);
+    incident_vertex = zeros(6 * vertex_size, 1);
+    edgecnt = 0;
+    for i = 1 : face_size
+        idx = faces(i, :);
+        for j = 1 : 3
+            tmp1 = j + 1;
+            if tmp1 > 3
+                tmp1 = tmp1 - 3;
+            end
+            tmp2 = j + 2;
+            if tmp2 > 3
+                tmp2 = tmp2 - 3;
+            end
+            j1 = idx(tmp1);
+            j2 = idx(tmp2);
+            edgecnt = edgecnt + 1;
+            incident_vertex(edgecnt) = j1;
+            next(edgecnt) = first(idx(j));
+            first(idx(j)) = edgecnt;
+            edgecnt = edgecnt + 1;
+            incident_vertex(edgecnt) = j2;
+            next(edgecnt) = first(idx(j));
+            first(idx(j)) = edgecnt;
+        end
+    end
+
+    fprintf('first bfs start\n');
+
+    diagonal_length = norm([max_x - min_x, max_y - min_y, max_z - min_z]);
+    sigma = 0.003 * diagonal_length;
+    saliency = zeros(7, vertex_size);
+    max_saliency = zeros(7, 1);
+
+    for k = 1 : vertex_size
+        if mod(k, 1024) == 0
+            fprintf('bfs: the %d vertex\n', k);
+        end
+        for i = 1 : 7
+            saliency(i, k) = 0.0;
+        end
+        gaussian_sigma1 = zeros(7);
+        gaussian_sigma2 = zeros(7);
+        sum_sigma1 = zeros(7);
+        sum_sigma2 = zeros(7);
+
+        v_vec = vertices(k, :);
+
+        used = zeros(vertex_size);
+        q = [];
+        q = [q; k];
+        used(k) = 1;
+        while ~isempty(q)
+            idx = q(1);
+            q(1) = [];
+            idx_vec = vertices(idx, :);
+            e = first(idx);
+            while e ~= -1
+                idx_next = incident_vertex(e);
+                if used(idx_next) ~= 1
+                    idx_next_vec = vertices(idx_next, :);
+                    if norm(idx_vec - idx_next_vec) <= 36 * sigma * sigma
+                        q = [q; idx_next];
+                        used(idx_next) = 1;
+                    end
+                end
+                e = next(e);
+            end
+
+            dist = norm(idx_vec - v_vec);
+            for i = 2 : 6
+                sigma_this = i * i * sigma * sigma;
+                if dist <= sigma_this
+                    factor = exp(-dist / (2 * sigma_this));
+                    gaussian_sigma1(i) = gaussian_sigma1(i) + mean_curvature(idx) * factor;
+                    sum_sigma1(i) = sum_sigma1(i) + factor;
+                end
+                if dist <= 2 * sigma_this
+                    factor = exp(-dist / (8 * sigma * sigma));
+                    gaussian_sigma2(i) = gaussian_sigma2(i) + mean_curvature(idx) * factor;
+                    sum_sigma2(i) = sum_sigma2(i) + factor;
+                end
+            end
+        end
+        for i = 2 : 6
+            saliency(i, k) = abs(gaussian_sigma1(i) / sum_sigma1(i) - gaussian_sigma2(i) / sum_sigma2(i));
+            max_saliency(i) = max(max_saliency(i), saliency(i, k));
+        end
+    end
+
+    fprintf('second bfs start\n');
+
+
+
 
 end
 
