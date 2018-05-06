@@ -3,7 +3,21 @@
 % not tested
 
 function [] = mesh()
-    [vertices, faces] = obj__read('C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\guitar_LR.obj');
+    home_path = 'C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR';
+    sub_path = dir(home_path);
+
+    for i = 1 : length(sub_path)
+        if( isequal(sub_path(i).name, '.') || ...
+            isequal(sub_path(i).name, '..') || ...
+            sub_path(i).isdir)
+            continue;
+        end
+        mesh_calc(i, sub_path(i).name);
+    end
+end
+
+function [] = mesh_calc(idx, name)
+    [vertices, faces] = obj__read(['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\EXP_MODELS_LR\' name]);
     vertex_size = length(vertices);
     face_size = length(faces);
     vertices = vertices';
@@ -12,7 +26,7 @@ function [] = mesh()
 
     FV.faces = faces;
     FV.vertices = vertices;
-    figure, patch(FV, 'facecolor', [0.5, 0.5, 0.5]), axis equal, axis off, axis image, hold on;
+    figure, patch(FV, 'facecolor', [0, 0.5, 0.5]), axis equal, axis off, axis image, hold on;
 
     min_x = 32767; min_y = 32767; min_z = 32767;
     max_x = -32767; max_y = -32767; max_z = -32767;
@@ -21,9 +35,9 @@ function [] = mesh()
         min_y = min(vertices(i, 2), min_y);
         min_z = min(vertices(i, 3), min_z);
 
-        max_x = min(vertices(i, 1), max_x);
-        max_y = min(vertices(i, 2), max_y);
-        max_z = min(vertices(i, 3), max_z);
+        max_x = max(vertices(i, 1), max_x);
+        max_y = max(vertices(i, 2), max_y);
+        max_z = max(vertices(i, 3), max_z);
 
     end
 
@@ -116,21 +130,6 @@ function [] = mesh()
     end
     %disp(mean_curvature);
 
-    for i = 1 : vertex_size
-        [R, G, B] = mean_curvature_to_rgb(mean_curvature(i), min_mean_curvature, max_mean_curvature);
-        if isreal(R) && ~isnan(R)
-            %continue;
-            fprintf('%d, %d\n', i, R);
-            if R >= 1.0
-                R = 1.0;
-            end
-            plot3(vertices(i, 1), vertices(i, 2), vertices(i, 3), '.', 'color', [R, G, B]);
-            hold on;
-        else
-            fprintf('%d \n', i);
-        end
-    end
-
     first = -1 * ones(vertex_size, 1);
     next = zeros(6 * vertex_size, 1);
     incident_vertex = zeros(6 * vertex_size, 1);
@@ -162,7 +161,7 @@ function [] = mesh()
     fprintf('first bfs start\n');
 
     diagonal_length = norm([max_x - min_x, max_y - min_y, max_z - min_z]);
-    sigma = 0.003 * diagonal_length;
+    sigma = 0.03 * diagonal_length;
     saliency = zeros(7, vertex_size);
     max_saliency = zeros(7, 1);
 
@@ -193,7 +192,8 @@ function [] = mesh()
                 idx_next = incident_vertex(e);
                 if used(idx_next) ~= 1
                     idx_next_vec = vertices(idx_next, :);
-                    if norm(idx_vec - idx_next_vec) <= 36 * sigma * sigma
+                    if norm(idx_vec - idx_next_vec) <= 6 * sigma
+                        %fprintf('%d, %d\n', idx, idx_next);
                         q = [q; idx_next];
                         used(idx_next) = 1;
                     end
@@ -203,7 +203,7 @@ function [] = mesh()
 
             dist = norm(idx_vec - v_vec);
             for i = 2 : 6
-                sigma_this = i * i * sigma * sigma;
+                sigma_this = i * sigma;
                 if dist <= sigma_this
                     factor = exp(-dist / (2 * sigma_this));
                     gaussian_sigma1(i) = gaussian_sigma1(i) + mean_curvature(idx) * factor;
@@ -223,9 +223,51 @@ function [] = mesh()
     end
 
     fprintf('second bfs start\n');
+    smooth_salienycy = zeros(vertex_size, 1);
+    local_max_saliency_sum = zeros(7, 1);
+    for k = 1 : vertex_size
+        if mod(k, 1024) == 0
+            fprintf('bfs: the %d vertex\n', k);
+        end
+        local_max_saliency = -12345 * zeros(7, 1);
+        v_vec = vertices(k, :);
+        used = zeros(vertex_size, 1);
+        q = [];
+        q = [q; k];
+        used(k) = 1;
+        while ~isempty(q)
+            idx = q(1);
+            q(1) = [];
+            e = first(idx);
+            while e ~= -1
+                idx_next = incident_vertex(e);
+                if ~used(idx_next)
+                    idx_next_vec = vertices(idx_next, :);
+                    if norm(v_vec - idx_next_vec) <= 6 * sigma
+                        q = [q; idx_next];
+                        used(idx_next) = 1;
+                    end
+                end
+                e = next(e);
+            end
+            for i = 2 : 6
+                local_max_saliency(i) = max(local_max_saliency(i), saliency(i, idx));
+            end
+        end
+        for i = 2 : 6
+            local_max_saliency_sum(i) = local_max_saliency_sum(i) + local_max_saliency(i);
+        end
+    end
+    local_max_saliency_sum = local_max_saliency_sum / vertex_size;
+    for i = 2 : 6
+        factor = (max_saliency(i) - local_max_saliency_sum(i)) * (max_saliency(i) - local_max_saliency_sum(i));
+        smooth_salienycy = smooth_salienycy + factor * ((saliency(i, :))');
+    end
+    fprintf('mesh saliency end');
 
+    verbol(smooth_salienycy, vertices);
 
-
+    select_best_view(name);
 
 end
 
@@ -260,11 +302,49 @@ function [R, G, B] = mean_curvature_to_rgb(mean_curvature, min_mean_curvature, m
     B = 0;
 end
 
+function [] = verbol(mean_curvature, vertices)
+    min_mean_curvature = 12456;
+    max_mean_curvature = -12356;
+    vertex_size = length(mean_curvature);
+    for i = 1 : vertex_size
+        min_mean_curvature = min(min_mean_curvature, mean_curvature(i));
+        max_mean_curvature = max(max_mean_curvature, mean_curvature(i));
+    end
+    for i = 1 : vertex_size
+        [R, G, B] = mean_curvature_to_rgb(mean_curvature(i), min_mean_curvature, max_mean_curvature);
+        if isreal(R) && ~isnan(R)
+            %continue;
+            %fprintf('%d, %d\n', i, R);
+            if R >= 1.0
+                R = 1.0;
+            end
+            plot3(vertices(i, 1), vertices(i, 2), vertices(i, 3), '.', 'color', [R, G, B]);
+            hold on;
+        else
+            %fprintf('%d \n', i);
+        end
+    end
+end
 
-
-
-
-
+% a naive implementation
+function [] = select_best_view(name)
+    max_saliency = 0.0;
+    for x = -1:0.4:1
+        for y = -1:0.4:1
+            for z = -1:0.4:1
+                view([x, y, z]);
+                saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' name '\mesh_salienty_tmp.png']);
+                img_tmp = imread(['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' name '\mesh_salienty_tmp.png']);
+                img_red = img_tmp(:, :, 1);
+                tmp_res = sum(sum(img_red));
+                if tmp_res > max_saliency
+                    saveas(gcf, ['C:\Users\AndrewHuang\Documents\GitHub\notes-on-algorithms\view selection\res\' name '\mesh_salienty_best.png']);
+                    max_saliency = tmp_res;
+                end
+            end
+        end
+    end
+end
 
 
 
