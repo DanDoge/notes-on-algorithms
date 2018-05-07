@@ -29,14 +29,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <map>
 #include <set>
 #include <vector>
+#include <queue>
 #include <cmath>
+
+#define epsilon 1e-15
 
 namespace obj {
 
 struct Model {
-    std::vector<float> vertex; //< 3 * N entries
-    std::vector<float> texCoord; //< 2 * N entries
-    std::vector<float> normal; //< 3 * N entries
+    std::vector<double> vertex; //< 3 * N entries
+    std::vector<double> texCoord; //< 2 * N entries
+    std::vector<double> normal; //< 3 * N entries
 
     std::map<std::string, std::vector<unsigned short> > faces; //< assume triangels and uniform indexing
 };
@@ -52,9 +55,9 @@ struct ObjModel {
 
     typedef std::pair<std::vector<FaceVertex>, std::vector<unsigned> > FaceList;
 
-    std::vector<float> vertex; //< 3 * N entries
-    std::vector<float> texCoord; //< 2 * N entries
-    std::vector<float> normal; //< 3 * N entries
+    std::vector<double> vertex; //< 3 * N entries
+    std::vector<double> texCoord; //< 2 * N entries
+    std::vector<double> normal; //< 3 * N entries
 
     std::map<std::string, FaceList > faces;
 };
