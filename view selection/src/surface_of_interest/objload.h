@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <cmath>
 
 #define epsilon 1e-15
+#define M_PI    3.1415926535
 
 namespace obj {
 

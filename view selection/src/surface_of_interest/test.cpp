@@ -79,25 +79,7 @@ double calc_diffusion_dist(double* a, double* b){
     return ans;
 }
 
-int main(){
-    char str[] = "test.obj";
-    std::ifstream in(str);
-    obj::ObjModel m = obj::parseObjModel(in);
-
-// compute spin images
-    std::cout << "calc spin images..." << std::endl;
-
-    // malloc first
-    std::cout << "malloc for spin_image, geodesic dist start..." << std::endl;
-    double** spin_image = (double** )malloc(sizeof(double*) * m.vertex.size() / 3);
-    for(int i = 0; i < m.vertex.size() / 3; i += 1){
-        spin_image[i] = (double* )malloc(sizeof(double) * 16 * 16);
-        for(int j = 0; j < 16; j += 1){
-            spin_image[i][j] = 0.0f;
-        }
-    }
-    std::cout << "finished." << std::endl;
-
+void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctness){
     // get median of edge length( not accurately ), and vertex normals
     std::cout << "calc vertex normal & edge length start..." << std::endl;
     int edge_cnt = 0;
@@ -175,8 +157,8 @@ int main(){
         double posit_i[3] = {m.vertex[idx_i * 3], m.vertex[idx_i * 3 + 1], m.vertex[idx_i * 3 + 2]};
         int idx_j = 0;
         if(idx_i % 1000 == 0){
-        	std::cout << "the " << idx_i << "th vertex..." <<std::endl;
-		}
+            std::cout << "the " << idx_i << "th vertex..." <<std::endl;
+        }
         for(std::vector<double>::iterator j = m.vertex.begin(); j != m.vertex.end(); j += 3, idx_j += 1){
             double normal_j[3] = {m.normal[idx_j * 3], m.normal[idx_j * 3 + 1], m.normal[idx_j * 3 + 2]};
             double posit_j[3] = {m.vertex[idx_j * 3], m.vertex[idx_j * 3 + 1], m.vertex[idx_j * 3 + 2]};
@@ -211,7 +193,6 @@ int main(){
 
     // calc single scale distinctness
     std::cout << "calc distinctness start..." << std::endl;
-    double* distinctness = (double* )malloc(sizeof(double) * m.vertex.size() / 3);
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
         if(i % 10 == 0){
             std::cout << "the" << i << "th vertex..." << std::endl;
@@ -265,11 +246,75 @@ int main(){
         free(geo_dist);
     }
     std::cout << "finished." << std::endl;
+}
+
+int main(){
+    char str[] = "test.obj";
+    std::ifstream in(str);
+    obj::ObjModel m = obj::parseObjModel(in);
+
+    // mesh-simplification done online
+    // "https://myminifactory.github.io/Fast-Quadric-Mesh-Simplification/"
+    // simplified files are: "test_2.obj", "test_4.obj"
+    char str_2[] = "test_2.obj";
+    std::ifstream in_2(str_2);
+    obj::ObjModel m_2 = obj::parseObjModel(in_2);
+
+    char str_4[] = "test_4.obj";
+    std::ifstream in_4(str_4);
+    obj::ObjModel m_4 = obj::parseObjModel(in_4);
+
+// compute spin images
+    std::cout << "calc spin images..." << std::endl;
+
+    // malloc first
+    std::cout << "malloc for spin_image, distinctness dist start..." << std::endl;
+    double** spin_image = (double** )malloc(sizeof(double*) * m.vertex.size() / 3);
+    double* distinctness = (double* )malloc(sizeof(double) * m.vertex.size() / 3);
+    for(int i = 0; i < m.vertex.size() / 3; i += 1){
+        spin_image[i] = (double* )malloc(sizeof(double) * 16 * 16);
+        for(int j = 0; j < 16; j += 1){
+            spin_image[i][j] = 0.0f;
+        }
+    }
+    double** spin_image_2 = (double** )malloc(sizeof(double*) * m_2.vertex.size() / 3);
+    double* distinctness_2 = (double* )malloc(sizeof(double) * m_2.vertex.size() / 3);
+    for(int i = 0; i < m_2.vertex.size() / 3; i += 1){
+        spin_image_2[i] = (double* )malloc(sizeof(double) * 16 * 16);
+        for(int j = 0; j < 16; j += 1){
+            spin_image_2[i][j] = 0.0f;
+        }
+    }
+    double** spin_image_4 = (double** )malloc(sizeof(double*) * m_4.vertex.size() / 3);
+    double* distinctness_4 = (double* )malloc(sizeof(double) * m_4.vertex.size() / 3);
+    for(int i = 0; i < m_4.vertex.size() / 3; i += 1){
+        spin_image_4[i] = (double* )malloc(sizeof(double) * 16 * 16);
+        for(int j = 0; j < 16; j += 1){
+            spin_image_4[i][j] = 0.0f;
+        }
+    }
+    std::cout << "finished." << std::endl;
+    calc_distinctness(m, spin_image, distinctness);
+    calc_distinctness(m_2, spin_image_2, distinctness_2);
+    calc_distinctness(m_4, spin_image_4, distinctness_4);
+
+
 
 
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
         free(spin_image[i]);
     }
     free(spin_image);
+    free(distinctness);
+    for(int i = 0; i < m_2.vertex.size() / 3; i += 1){
+        free(spin_image_2[i]);
+    }
+    free(spin_image_2);
+    free(distinctness_2);
+    for(int i = 0; i < m_4.vertex.size() / 3; i += 1){
+        free(spin_image_4[i]);
+    }
+    free(spin_image_4);
+    free(distinctness_4);
     return 0;
 }
