@@ -1,83 +1,16 @@
+// header file from github, not my code
+// may delete them if i break any license
 #include "objload.h"
+#include "geodesic_algorithm_subdivision.h"
 
-typedef struct node{
-    int idx;
-    int cost;
-    friend bool operator<(const node& a, const node& b){
-        return a.cost > b.cost;
-    }
-}node;
+// my code starts from here...
+#include "utils_general.h"
+#include "utils_vector.h"
 
-void calc_cross_product(double* res, double* a, double* b){
-    res[0] = a[1] * b[2] - a[2] * b[1];
-    res[1] = a[2] * b[0] - a[0] * b[2];
-    res[2] = a[0] * b[1] - a[1] * b[0];
-    return ;
-}
-
-void normalize_3(double* v){
-    double norm = 0.0f;
-    for(int i = 0; i < 3; i += 1){
-        norm += v[i] * v[i];
-    }
-    norm = sqrt(norm);
-    if(norm != 0){
-        for(int i = 0; i < 3; i += 1){
-            v[i] /= norm;
-        }
-    }
-    return ;
-}
-
-template <typename T>
-T min(const T& a, const T& b){
-    if(a < b){
-        return a;
-    }else{
-        return b;
-    }
-    std::cout << "error, in min()" << std::endl;
-    return a;
-}
-
-double calc_inner_product(double* a, double* b){
-    double res = 0.0f;
-    for(int i = 0; i < 3; i += 1){
-        res += a[i] * b[i];
-    }
-}
-
-double calc_diffusion_dist(double* a, double* b){
-    double d[6][16][16] = {};
-    double ans = 0.0f;
-    for(int k = 0; k <= 5; k += 1){
-        if(k == 0){
-            for(int i = 0; i < 16; i += 1){
-                for(int j = 0; j < 16; j += 1){
-                    d[k][i][j] = a[i * 16 + j] - b[i * 16 + j];
-                }
-            }
-        }else{
-            for(int i = 0; i < 16; i += 1){
-                for(int j = 0; j < 16; j += 1){
-                    d[k][i][j] = 0.0f;
-                    for(int ii = 0; ii < 16; ii += 1){
-                        for(int jj = 0; jj < 16; jj += 1){
-                            int n = (i - ii) * (i - ii) + (j - jj) * (j - jj);
-                            d[k][i][j] += exp(-2 * n) * 2 / M_PI;
-                        }
-                    }
-                }
-            }
-        }
-        for(int i = 0; i < 16; i += 1){
-            for(int j = 0; j < 16; j += 1){
-                ans += fabs(d[k][i][j]);
-            }
-        }
-    }
-    return ans;
-}
+// c++ general header files
+#include <iostream>
+#include <fstream>
+#include <string>
 
 void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctness){
     // get median of edge length( not accurately ), and vertex normals
@@ -149,7 +82,7 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
     std::cout << "finished, edge_med_length is " << edge_med_length << std::endl;
 
 
-    // calc spin images
+    // calc spin images, O(n)
     std::cout << "calc spin images start..." << std::endl;
     int idx_i = 0;
     for(std::vector<double>::iterator i = m.vertex.begin(); i != m.vertex.end(); i += 3, idx_i += 1){
@@ -174,7 +107,7 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
     std::cout << "finished." << std::endl;
 
 /*
-    // calc geo_dist using flord algorithm, rubbish code, O(n^3),
+    // calc geo_dist using flord algorithm, rubbish code, O(n^3), deprecated
     std::cout << "calc geo_dist start..." << std::endl;
     for(int k = 0; k < m.vertex.size() / 3; k += 1){
         if(k % 10 == 0){
