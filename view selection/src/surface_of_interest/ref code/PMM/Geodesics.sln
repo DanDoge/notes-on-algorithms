@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PMM", "PMM\PMM.vcproj", "{960849EC-1ECB-4A6D-9533-603EF88DB21D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PMMUI", "PMMUI\PMMUI.vcproj", "{F70D3633-856F-442C-8540-863ECF5DFAE1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PMM3D", "PMM3D\PMM3D.vcproj", "{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		EmuDebug|Win32 = EmuDebug|Win32
+		EmuRelease|Win32 = EmuRelease|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.Debug|Win32.Build.0 = Debug|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.Release|Win32.ActiveCfg = Release|Win32
+		{960849EC-1ECB-4A6D-9533-603EF88DB21D}.Release|Win32.Build.0 = Release|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.Debug|Win32.Build.0 = Debug|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.Release|Win32.ActiveCfg = Release|Win32
+		{F70D3633-856F-442C-8540-863ECF5DFAE1}.Release|Win32.Build.0 = Release|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.Debug|Win32.Build.0 = Debug|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.EmuDebug|Win32.ActiveCfg = EmuDebug|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.EmuDebug|Win32.Build.0 = EmuDebug|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.EmuRelease|Win32.ActiveCfg = EmuRelease|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.EmuRelease|Win32.Build.0 = EmuRelease|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.Release|Win32.ActiveCfg = Release|Win32
+		{3F898DCD-FF91-43AC-AB5A-A4BF5A5D5575}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal

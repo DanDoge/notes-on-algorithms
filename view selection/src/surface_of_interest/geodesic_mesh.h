@@ -31,7 +31,7 @@ public:
 
 	template<class Points, class Faces>
 	void initialize_mesh_data(unsigned num_vertices,
-							  Points& p, 
+							  Points& p,
 							  unsigned num_faces,
 							  Faces& tri);		//build mesh from regular point-triangle representation
 
@@ -42,7 +42,7 @@ public:
 	std::vector<Edge>& edges(){return m_edges;};
 	std::vector<Face>& faces(){return m_faces;};
 
-	unsigned closest_vertices(SurfacePoint* p, 
+	unsigned closest_vertices(SurfacePoint* p,
 								 std::vector<vertex_pointer>* storage = NULL);		//list vertices closest to the point
 
 private:
@@ -51,9 +51,9 @@ private:
 	bool verify();					//verifies connectivity of the mesh and prints some debug info
 
 	typedef void* void_pointer;
-	void_pointer allocate_pointers(unsigned n) 
+	void_pointer allocate_pointers(unsigned n)
 	{
-		return m_pointer_allocator.allocate(n); 
+		return m_pointer_allocator.allocate(n);
 	}
 
 	std::vector<Vertex> m_vertices;
@@ -63,7 +63,7 @@ private:
 	SimlpeMemoryAllocator<void_pointer> m_pointer_allocator;	//fast memory allocating for Face/Vertex/Edge cross-references
 };
 
-inline unsigned Mesh::closest_vertices(SurfacePoint* p, 
+inline unsigned Mesh::closest_vertices(SurfacePoint* p,
 										  std::vector<vertex_pointer>* storage)
 {
 	assert(p->type() != UNDEFINED_POINT);
@@ -115,20 +115,20 @@ void Mesh::initialize_mesh_data(Points& p, Faces& tri)		//build mesh from regula
 	assert(p.size() % 3 == 0);
 	unsigned const num_vertices = p.size() / 3;
 	assert(tri.size() % 3 == 0);
-	unsigned const num_faces = tri.size() / 3; 
+	unsigned const num_faces = tri.size() / 3;
 
 	initialize_mesh_data(num_vertices, p, num_faces, tri);
 }
 
 template<class Points, class Faces>
 void Mesh::initialize_mesh_data(unsigned num_vertices,
-								Points& p, 
+								Points& p,
 								unsigned num_faces,
 								Faces& tri)
 {
 	unsigned const approximate_number_of_internal_pointers = (num_vertices + num_faces)*4;
-	unsigned const max_number_of_pointer_blocks = 100; 
-	m_pointer_allocator.reset(approximate_number_of_internal_pointers, 
+	unsigned const max_number_of_pointer_blocks = 100;
+	m_pointer_allocator.reset(approximate_number_of_internal_pointers,
 							  max_number_of_pointer_blocks);
 
 	m_vertices.resize(num_vertices);
@@ -183,7 +183,7 @@ inline void Mesh::build_adjacencies()
 		unsigned num_adjacent_faces = count[i];
 
 		v.adjacent_faces().set_allocation(allocate_pointers(num_adjacent_faces),		//allocate three units of memory
-										  num_adjacent_faces);	
+										  num_adjacent_faces);
 	}
 
 	std::fill(count.begin(), count.end(), 0);
@@ -212,7 +212,7 @@ inline void Mesh::build_adjacencies()
 			half_edges[k].vertex_0 = std::min(vertex_id_1, vertex_id_2);
 			half_edges[k].vertex_1 = std::max(vertex_id_1, vertex_id_2);
 
-			k++;	
+			k++;
 		}
 	}
 	std::sort(half_edges.begin(), half_edges.end());
@@ -247,7 +247,7 @@ inline void Mesh::build_adjacencies()
 		e.adjacent_vertices()[1] = &m_vertices[half_edges[i].vertex_1];
 
 		e.length() = e.adjacent_vertices()[0]->distance(e.adjacent_vertices()[1]);
-		assert(e.length() > 1e-100);		//algorithm works well with non-degenerate meshes only 
+		assert(e.length() > 1e-100);		//algorithm works well with non-degenerate meshes only
 
 		if(i != half_edges.size()-1 && half_edges[i] == half_edges[i+1])	//double edge
 		{
@@ -276,7 +276,7 @@ inline void Mesh::build_adjacencies()
 	for(unsigned i=0; i<m_vertices.size(); ++i)
 	{
 		m_vertices[i].adjacent_edges().set_allocation(allocate_pointers(count[i]),
-													  count[i]);	
+													  count[i]);
 	}
 	std::fill(count.begin(), count.end(), 0);
 	for(unsigned i=0; i<m_edges.size(); ++i)
@@ -287,12 +287,12 @@ inline void Mesh::build_adjacencies()
 			vertex_pointer v = e.adjacent_vertices()[j];
 			v->adjacent_edges()[count[v->id()]++] = &e;
 		}
-	}	
+	}
 
 	//			Faces->adjacent Edges
 	for(unsigned i=0; i<m_faces.size(); ++i)
 	{
-		m_faces[i].adjacent_edges().set_allocation(allocate_pointers(3),3);	
+		m_faces[i].adjacent_edges().set_allocation(allocate_pointers(3),3);
 	}
 
 	count.resize(m_faces.size());
@@ -306,13 +306,13 @@ inline void Mesh::build_adjacencies()
 			assert(count[f->id()]<3);
 			f->adjacent_edges()[count[f->id()]++] = &e;
 		}
-	}	
+	}
 
 		//compute angles for the faces
 	for(unsigned i=0; i<m_faces.size(); ++i)
 	{
 		Face& f = m_faces[i];
-		double abc[3];		
+		double abc[3];
 		double sum = 0;
 		for(unsigned j=0; j<3; ++j)		//compute angle adjacent to the vertex j
 		{
@@ -323,12 +323,12 @@ inline void Mesh::build_adjacencies()
 			}
 
 			double angle = angle_from_edges(abc[0], abc[1], abc[2]);
-			assert(angle>1e-5);						//algorithm works well with non-degenerate meshes only 
+			assert(angle>1e-5);						//algorithm works well with non-degenerate meshes only
 
 			f.corner_angles()[j] = angle;
 			sum += angle;
 		}
-		assert(std::abs(sum - M_PI) < 1e-5);		//algorithm works well with non-degenerate meshes only 
+		assert(std::abs(sum - M_PI) < 1e-5);		//algorithm works well with non-degenerate meshes only
 	}
 
 		//define m_turn_around_flag for vertices
@@ -346,7 +346,7 @@ inline void Mesh::build_adjacencies()
 	for(unsigned i=0; i<m_vertices.size(); ++i)
 	{
 		Vertex& v = m_vertices[i];
-		v.saddle_or_boundary() = (total_vertex_angle[v.id()] > 2.0*M_PI - 1e-5); 
+		v.saddle_or_boundary() = (total_vertex_angle[v.id()] > 2.0*M_PI - 1e-5);
 	}
 
 	for(unsigned i=0; i<m_edges.size(); ++i)
@@ -365,7 +365,7 @@ inline void Mesh::build_adjacencies()
 inline bool Mesh::verify()		//verifies connectivity of the mesh and prints some debug info
 {
 	std::cout << std::endl;
-	// make sure that all vertices are mentioned at least once. 
+	// make sure that all vertices are mentioned at least once.
 	// though the loose vertex is not a bug, it most likely indicates that something is wrong with the mesh
 	std::vector<bool> map(m_vertices.size(), false);
 	for(unsigned i=0; i<m_edges.size(); ++i)
@@ -401,14 +401,15 @@ inline bool Mesh::verify()		//verifies connectivity of the mesh and prints some 
 			}
 		}
 	}
-	assert(std::find(map.begin(), map.end(), false) == map.end());
+	// modified because my meshes are often not connected...
+	//assert(std::find(map.begin(), map.end(), false) == map.end());
 
 	//print some mesh statistics that can be useful in debugging
-	std::cout << "mesh has "	<< m_vertices.size() 
-			  << " vertices, "	<< m_faces.size() 
-			  << " faces, "		<< m_edges.size() 
+	std::cout << "mesh has "	<< m_vertices.size()
+			  << " vertices, "	<< m_faces.size()
+			  << " faces, "		<< m_edges.size()
 			  << " edges\n";
-	
+
 	unsigned total_boundary_edges = 0;
 	double longest_edge = 0;
 	double shortest_edge = 1e100;
@@ -420,7 +421,7 @@ inline bool Mesh::verify()		//verifies connectivity of the mesh and prints some 
 		shortest_edge = std::min(shortest_edge, e.length());
 	}
 	std::cout << total_boundary_edges << " edges are boundary edges\n";
-	std::cout << "shortest/longest edges are " 
+	std::cout << "shortest/longest edges are "
 			  << shortest_edge << "/"
 			  << longest_edge << " = "
 			  << shortest_edge/longest_edge
@@ -476,14 +477,14 @@ inline bool Mesh::verify()		//verifies connectivity of the mesh and prints some 
 	return true;
 }
 
-inline void fill_surface_point_structure(geodesic::SurfacePoint* point, 
-										 double* data, 
+inline void fill_surface_point_structure(geodesic::SurfacePoint* point,
+										 double* data,
 										 Mesh* mesh)
 {
 	point->set(data);
 	unsigned type = (unsigned) data[3];
 	unsigned id = (unsigned) data[4];
-	
+
 
 	if(type == 0)		//vertex
 	{
@@ -499,8 +500,8 @@ inline void fill_surface_point_structure(geodesic::SurfacePoint* point,
 	}
 }
 
-inline void fill_surface_point_double(geodesic::SurfacePoint* point, 
-									  double* data, 
+inline void fill_surface_point_double(geodesic::SurfacePoint* point,
+									  double* data,
 									  long mesh_id)
 {
 	data[0] = point->x();
@@ -524,4 +525,4 @@ inline void fill_surface_point_double(geodesic::SurfacePoint* point,
 
 } //geodesic
 
-#endif	
+#endif

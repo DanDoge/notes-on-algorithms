@@ -3,7 +3,6 @@ view selection/idea/
 view selection/EXP_MODELS_LR
 view selection/EXP_MODELS
 view selection/res
-view selection/src/surface_of_interest/ref*
 view selection/src/surface_of_interest/*.exe
 view selection/src/surface_of_interest/*.obj
 

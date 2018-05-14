@@ -1,7 +1,9 @@
 // header file from github, not my code
 // may delete them if i break any license
 #include "objload.h"
+#include "geodesic_algorithm_dijkstra.h"
 #include "geodesic_algorithm_subdivision.h"
+//#include "geodesic_algorithm_exact.h"
 
 // my code starts from here...
 #include "utils_general.h"
@@ -11,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <windows.h>
 
 void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctness){
     // get median of edge length( not accurately ), and vertex normals
@@ -124,6 +127,71 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
     std::cout << "finished." << std::endl;
 */
 
+/*
+    // deprecated, too slow to bear
+    // write to file, temp code, must be removed
+    std::cout << "write to temp file, prepare to call geo_dist..." << std::endl;
+    std::ofstream out;
+    out.open("tmp_median.txt", std::ios::out | std::ios::trunc);
+    out << m.vertex.size() / 3 << ' ' << m.faces.begin()->second.first.size() / 3 << std::endl;
+    for(int i = 0; i < m.vertex.size(); i += 3){
+        out << m.vertex[i] << ' ' << m.vertex[i + 1] << ' ' << m.vertex[i + 2] << std::endl;
+    }
+    obj::ObjModel::FaceList& fl =  m.faces.begin()->second;
+    int face_size = fl.first.size() / 3;
+    for(int i = 0; i < face_size; i += 1){
+        int v1_idx = fl.first[i * 3 + 0].v;
+        int v2_idx = fl.first[i * 3 + 1].v;
+        int v3_idx = fl.first[i * 3 + 2].v;
+        out << v1_idx << ' ' << v2_idx << ' ' << v3_idx << std::endl;
+    }
+    out.close();
+
+    // calc geo_dist
+    std::cout << "calc distinctness start..." << std::endl;
+    std::vector<double> points;
+    std::vector<unsigned> faces;
+    geodesic::read_mesh_from_file("tmp_median.txt", points, faces);
+
+    geodesic::Mesh mesh;
+    mesh.initialize_mesh_data(points, faces);
+    unsigned const subdivision_level = 2;
+    geodesic::GeodesicAlgorithmDijkstra dijkstra_algorithm(&mesh);
+
+    for(int i = 0; i < mesh.vertices().size(); i += 1){
+        if(i % 1 == 0){
+            std::cout << "the " << i << "th vertex..." << std::endl;
+        }
+
+        geodesic::SurfacePoint source(&mesh.vertices()[i]);
+        std::vector<geodesic::SurfacePoint> all_sources(1, source);
+        dijkstra_algorithm.propagate(all_sources);
+
+        double* geo_dist = (double* )malloc(sizeof(double) * m.vertex.size() / 3);
+        double* dist = (double* )malloc(sizeof(double) * m.vertex.size() / 3);
+
+        for(unsigned j = 0; j < mesh.vertices().size(); j += 1){
+            geodesic::SurfacePoint p(&mesh.vertices()[j]);
+            unsigned best_source = dijkstra_algorithm.best_source(p, geo_dist[j]);
+            dist[j] = calc_diffusion_dist(spin_image[i], spin_image[j]);
+            dist[j] /= 1 + 3 * geo_dist[j];
+        }
+
+        std::sort(dist, dist + m.vertex.size() / 3);
+        int K = m.vertex.size() / 60;
+        double res = 0.0f;
+        for(int j = 0; j < K; j += 1){
+            res += dist[j];
+        }
+        res = 1 - exp(-res / K);
+        distinctness[i] = res;
+
+        free(dist);
+        free(geo_dist);
+    }
+*/
+/*
+    // slow! deprecated!
     // calc single scale distinctness
     std::cout << "calc distinctness start..." << std::endl;
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
@@ -178,6 +246,35 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
         free(visit);
         free(geo_dist);
     }
+*/
+
+    // will this work?
+    // deprecated, too slow to bear
+    // write to file, temp code, must be removed
+    std::cout << "write to temp file, prepare to call geo_dist..." << std::endl;
+    std::ofstream out;
+    out.open("C:\\spider\\tmp\\geodesics_lib\\bin\\maxplanck\\maxplanck.obj", std::ios::out | std::ios::trunc);
+    //out << m.vertex.size() / 3 << ' ' << m.faces.begin()->second.first.size() / 3 << std::endl;
+    for(int i = 0; i < m.vertex.size(); i += 3){
+        out  << "v " << m.vertex[i] << ' ' << m.vertex[i + 1] << ' ' << m.vertex[i + 2] << std::endl;
+    }
+    obj::ObjModel::FaceList& fl =  m.faces.begin()->second;
+    int face_size = fl.first.size() / 3;
+    for(int i = 0; i < face_size; i += 1){
+        int v1_idx = fl.first[i * 3 + 0].v;
+        int v2_idx = fl.first[i * 3 + 1].v;
+        int v3_idx = fl.first[i * 3 + 2].v;
+        out << "f " << v1_idx + 1 << ' ' << v2_idx + 1 << ' ' << v3_idx + 1 << std::endl;
+    }
+    out.close();
+    char* cmd = "C:\\spider\\tmp\\geodesics_lib\\bin\\GeoTest.exe C:\\spider\\tmp\\geodesics_lib\\bin\\maxplanck\\maxplanck.obj -d -s ";
+    for(int i = 0; i < m.vertex.size() / 3; i += 1){
+        char cmd_now[1024] = {};
+        sprintf(cmd_now, "%s%d\n", cmd, i);
+        printf("%s\n", cmd_now);
+        system(cmd_now);
+    }
+
     std::cout << "finished." << std::endl;
 }
 
