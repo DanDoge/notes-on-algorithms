@@ -1,3 +1,42 @@
+/* PROGRAM: ch3d.h
+ * PURPOSE: Module for 3D convex hull algorithm
+ * AUTHOR:  Geoffrey Card
+ * DATE:    2014-10-16 -
+ * NOTES:   Time: O(n^2*log(n))    Algorithm requires sort(n) for each n, hence n*n*log(n).
+ *          Space: O(n)
+ * TO DO:
+ */
+
+#ifndef CH3D_H_
+#define CH3D_H_
+
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <ctime>
+
+//#define DEBUG
+
+#define PI 3.14159
+
+#define EPSILON 1e-3
+
+#define TRUE  1
+#define FALSE 0
+
+#define UNVISITED 0
+#define QUEUED    1
+#define VISITED   2
+
+#define VERTICES 0
+#define EDGES    1
+#define FACETS   2
+
+#define CONCAVE 0
+#define PLANAR  1
+#define CONVEX  2
+
+
 /* PROGRAM: ch3d.c
  * PURPOSE: Module for 3D convex hull algorithm
  * AUTHOR:  Geoffrey Card
@@ -6,10 +45,6 @@
  *          Space: O(n)
  * TO DO:
  */
-
-#include "ch3d.h"
-
-using namespace std;
 
 void CrossProduct(float* a, float* b, float* c) {
 	c[0] = a[1]*b[2]-a[2]*b[1];
@@ -1476,3 +1511,6 @@ void ConvexHull3D(float** p_p, unsigned int* lenp_p, unsigned int** l_p, unsigne
 
 	return;
 }
+
+
+#endif /* CH3D_H_ */

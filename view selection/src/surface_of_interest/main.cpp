@@ -3,6 +3,8 @@
 #include "objload.h"
 #include "geodesic_algorithm_dijkstra.h"
 #include "geodesic_algorithm_subdivision.h"
+#include "svd.h"
+#include "ch3d.h"
 //#include "geodesic_algorithm_exact.h"
 
 // my code starts from here...
@@ -248,7 +250,8 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
     }
 */
 
-    // will this work?
+
+    // will this work? ==> wont
     // deprecated, too slow to bear
     // write to file, temp code, must be removed
     std::cout << "write to temp file, prepare to call geo_dist..." << std::endl;
@@ -267,15 +270,64 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
         out << "f " << v1_idx + 1 << ' ' << v2_idx + 1 << ' ' << v3_idx + 1 << std::endl;
     }
     out.close();
+
+    // malloc for distance
+    std::vector<std::vector<double> > dist;
+    dist.resize(m.vertex.size() / 3);
+
     char* cmd = "C:\\spider\\tmp\\geodesics_lib\\bin\\GeoTest.exe C:\\spider\\tmp\\geodesics_lib\\bin\\maxplanck\\maxplanck.obj -d -s ";
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
         char cmd_now[1024] = {};
         sprintf(cmd_now, "%s%d\n", cmd, i);
         printf("%s\n", cmd_now);
         system(cmd_now);
+
+        std::ifstream in;
+        sprintf(cmd_now, "%s%d%s", "C:\\spider\\tmp\\geodesics_lib\\bin\\maxplanck\\maxplanck.obj.", i, ".dist");
+        in.open(cmd_now, std::ios::in);
+
+        dist[i].resize(m.vertex.size() / 3);
+        for(int j = 0; j < m.vertex.size() / 3; j += 1){
+            in >> dist[i][j];
+        }
     }
 
+    std::vector<std::vector<double> > u;
+    std::vector<double> s;
+    std::vector<std::vector<double> > v;
+    svd(dist, 3, u, s, v);
+    for(int i = 0; i < s.size(); i += 1){
+        std::cout << s[i] << ' ';
+    }
+    std::cout << std::endl;
+
+int tmp = 0;
+std::cin >> tmp;
+
+    // perform MDS translation
+    for(int i = 0; i < 3; i += 1){
+        for(int j = 0; j < v[0].size(); j += 1){
+            v[i][j] *= sqrt(s[i]);
+        }
+    }
+
+    // compute convex hull
+    float* p = (float* )malloc(3 * v[0].size() * sizeof(float));
+    unsigned int lenp = v[0].size();
+    unsigned int lenl = 0;
+    unsigned int* l = NULL;
+    unsigned leni = 0;
+    for(int i = 0; i < v[0].size(); i += 1){
+        for(int j = 0; j < 3; j += 1){
+            p[i * 3 + j] = v[j][i];
+        }
+    }
+    ConvexHull3D(&p, &lenp, &l, &lenl, &leni, VERTICES);
+    PrintList(p, lenp, l, lenl, leni);
+
     std::cout << "finished." << std::endl;
+
+    // detect extremities;
 }
 
 int main(){
