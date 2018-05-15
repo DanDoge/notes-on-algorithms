@@ -274,6 +274,8 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
     // malloc for distance
     std::vector<std::vector<double> > dist;
     dist.resize(m.vertex.size() / 3);
+    std::vector<double> sum_of_geo_dist;
+    sum_of_geo_dist.reserve(m.vertex.size() / 3);
 
     char* cmd = "C:\\spider\\tmp\\geodesics_lib\\bin\\GeoTest.exe C:\\spider\\tmp\\geodesics_lib\\bin\\maxplanck\\maxplanck.obj -d -s ";
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
@@ -289,6 +291,7 @@ void calc_distinctness(obj::ObjModel& m, double** spin_image, double* distinctne
         dist[i].resize(m.vertex.size() / 3);
         for(int j = 0; j < m.vertex.size() / 3; j += 1){
             in >> dist[i][j];
+            sum_of_geo_dist[i] += dist[i][j];
         }
     }
 
@@ -327,7 +330,29 @@ std::cin >> tmp;
 
     std::cout << "finished." << std::endl;
 
-    // detect extremities;
+// detect extremities
+    std::vector<int> extremity_points;
+    // who is on the convex hull?
+    for(int i = 0; i < lenp; i += 1){
+        if(l[i] < lenp){
+            int idx = l[i];
+            // is it a local maxima?
+            int is_local_maxima = 1;
+            for(std::set<int>::iterator it = adj_table[idx].start(); it != adj_table[idx].end(); it++){
+                if(sum_of_geo_dist[*it] > sum_of_geo_dist[idx]){
+                    is_local_maxima = 0;
+                    break;
+                }
+            }
+            if(is_local_maxima){
+                extremity_points.push_back(idx);
+            }
+        }else{
+            std::cout << "something must be wrong! in calc_distinctness(), while detecting distinctness";
+        }
+    }
+
+
 }
 
 int main(){
