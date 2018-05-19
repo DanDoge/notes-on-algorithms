@@ -6,7 +6,7 @@ typedef struct node{
     }
 }node;
 
-double calc_diffusion_dist(double* a, double* b){
+double calc_diffusion_dist(std::vector<double> a, std::vector<double> b){
     double d[6][16][16] = {};
     double ans = 0.0f;
     for(int k = 0; k <= 5; k += 1){

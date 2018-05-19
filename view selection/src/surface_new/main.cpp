@@ -4,7 +4,7 @@
 #include "include/geodesic_algorithm_dijkstra.h"
 #include "include/geodesic_algorithm_subdivision.h"
 #include "include/svd.h"
-#include "cinclude/h3d.h"
+#include "include/ch3d.h"
 //#include "geodesic_algorithm_exact.h"
 
 // my code starts from here...
@@ -16,6 +16,7 @@
 #include <fstream>
 #include <string>
 #include <windows.h>
+#include <algorithm>
 
 
 void calc_distinctness(char str[], std::vector<double>& distinctness, std::vector<std::set<int> >& adj_table, std::vector<std::vector<double> >& dist){
@@ -25,7 +26,7 @@ void calc_distinctness(char str[], std::vector<double>& distinctness, std::vecto
     obj::ObjModel m = obj::parseObjModel(in);
 
     std::vector<double> edge_length;
-    std::vector<std::vector<unsigned int> > spin_image;
+    std::vector<std::vector<double> > spin_image;
 
     distinctness.reserve(m.vertex.size() / 3);
     spin_image.reserve(m.vertex.size() / 3);
@@ -170,7 +171,7 @@ void calc_distinctness(char str[], std::vector<double>& distinctness, std::vecto
             distinct[j] = calc_diffusion_dist(spin_image[i], spin_image[j]);
             distinct[j] /= 1 + 3 * dist[i][j];
         }
-        std::sort(dist, dist + m.vertex.size() / 3);
+        std::sort(dist.begin(), dist.begin() + m.vertex.size() / 3);
         int K = m.vertex.size() / 60;
         double res = 0.0f;
         for(int j = 0; j < K; j += 1){
@@ -183,7 +184,32 @@ void calc_distinctness(char str[], std::vector<double>& distinctness, std::vecto
 }
 
 
-void calc_extremities(std::vector<std::vector<double> > dist, std::vector<std::set<int> > adj_table, std::vector<int> extremity_points){
+void map_back(char str_small[], char str_large[], std::vector<double> &dist_small, std::vector<double> &dist_large){
+
+// naive approach, O(n^2)
+
+    std::ifstream in_s(str_small);
+    obj::ObjModel m_s = obj::parseObjModel(in_s);
+
+    std::ifstream in_l(str_large);
+    obj::ObjModel m_l = obj::parseObjModel(in_l);
+
+    for(int i = 0; i < m_s.vertex.size() / 3; i += 1){
+        for(int j = 0; j < m_l.vertex.size() / 3; j += 1){
+            // maybe better replace with some epsilon?
+            if(m_s.vertex[3 * i + 0] == m_l.vertex[3 * j + 0]
+            && m_s.vertex[3 * i + 1] == m_l.vertex[3 * j + 1]
+            && m_s.vertex[3 * i + 2] == m_l.vertex[3 * j + 2]){
+                dist_large[j] += dist_small[i];
+            }
+        }
+    }
+
+    return ;
+}
+
+
+void calc_extremities(std::vector<std::vector<double> > &dist, std::vector<std::set<int> > &adj_table, std::vector<int> &extremity_points){
 
 // MDS transform
 
@@ -219,13 +245,21 @@ void calc_extremities(std::vector<std::vector<double> > dist, std::vector<std::s
 
 // get extreme points
 
+    std::vector<double> sum_of_geo_dist;
+	sum_of_geo_dist.reserve(dist.size());
+    for(int i = 0; i < sum_of_geo_dist.size(); i += 1){
+        for(int j = 0; j < sum_of_geo_dist.size(); j += 1){
+            sum_of_geo_dist[i] += dist[i][j];
+        }
+    }
+
     // who is on the convex hull?
     for(int i = 0; i < lenp; i += 1){
         if(l[i] < lenp){
             int idx = l[i];
             // is it a local maxima?
             int is_local_maxima = 1;
-            for(std::set<int>::iterator it = adj_table[idx].start(); it != adj_table[idx].end(); it++){
+            for(std::set<int>::iterator it = adj_table[idx].begin(); it != adj_table[idx].end(); it++){
                 if(sum_of_geo_dist[*it] > sum_of_geo_dist[idx]){
                     is_local_maxima = 0;
                     break;
@@ -240,19 +274,62 @@ void calc_extremities(std::vector<std::vector<double> > dist, std::vector<std::s
     }
 }
 
+void patch_association(std::vector<double> &distinctness, std::vector<int> &extremity_points, std::vector<std::vector<double> > &dist){
+    std::vector<double> tmp_for_sort = distinctness;
+    sort(tmp_for_sort.begin(), tmp_for_sort.end());
+    double focus_threhold = tmp_for_sort[tmp_for_sort.size() * 4 / 5];
+    // we treat it as a bool array from now on
+    for(int i = 0; i < tmp_for_sort.size(); i += 1){
+        if(distinctness[i] >= focus_threhold){
+            tmp_for_sort[i] = 1.0f;
+        }else{
+            tmp_for_sort[i] = 0.0f;
+        }
+    }
+
+    std::vector<double> dist_a(distinctness.size());
+    for(int i = 0; i < distinctness.size(); i += 1){
+        double min_geod = 1000.0f;
+        double min_d_foci = 0.0f;
+        for(int j = 0; j < distinctness.size(); j += 1){
+            if(tmp_for_sort[j] != 0 && dist[i][j] < min_geod){
+                min_d_foci = distinctness[j];
+                min_geod = dist[i][j];
+            }
+        }
+        dist_a[i] = min_d_foci * exp(- min_geod * min_geod * 200);
+    }
+
+    std::vector<double> dist_e(distinctness.size());
+    for(int i = 0; i < distinctness.size(); i += 1){
+        double min_geod = 1000.0f;
+        double min_d_ext = 0.0f;
+        for(int j = 0; j < extremity_points.size(); j += 1){
+            if(dist[i][extremity_points[j]] < min_geod){
+                min_geod = dist[i][extremity_points[j]];
+                min_d_ext = distinctness[extremity_points[j]];
+            }
+        }
+    }
+
+    for(int i = 0; i < distinctness.size(); i += 1){
+        distinctness[i] = std::max((distinctness[i] + dist_a[i]) / 2, dist_e[i]);
+    }
+}
+
 int main(){
 
     char str_4[] = "test_4.obj";
     std::vector<double> distinctness_4;
     std::vector<std::set<int> > adj_table_4;
     std::vector<std::vector<double> > dist_4;
-    calc_distinctness(str, distinctness_4, adj_table_4, dist_4);
+    calc_distinctness(str_4, distinctness_4, adj_table_4, dist_4);
 
     char str_2[] = "test_2.obj";
     std::vector<double> distinctness_2;
     std::vector<std::set<int> > adj_table_2;
     std::vector<std::vector<double> > dist_2;
-    calc_distinctness(str, distinctness_2, adj_table_2, dist_2);
+    calc_distinctness(str_2, distinctness_2, adj_table_2, dist_2);
 
     map_back(str_4, str_2, distinctness_4, distinctness_2);
 
@@ -266,5 +343,7 @@ int main(){
 
     std::vector<int> extremity_points;
     calc_extremities(dist, adj_table, extremity_points);
+
+    patch_association(distinctness, extremity_points, dist);
     return 0;
 }
