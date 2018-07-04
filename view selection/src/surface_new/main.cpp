@@ -60,10 +60,10 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
             }
 
 
-            // get edge_length
-            double length_12 = (v1[0] - v2[0]) * (v1[0] - v2[0]) + (v1[1] - v2[1]) * (v1[1] - v2[1]) + (v1[0] - v2[0]) * (v1[2] - v2[2]);
-            double length_23 = (v2[0] - v3[0]) * (v2[0] - v3[0]) + (v2[1] - v3[1]) * (v2[1] - v3[1]) + (v2[0] - v3[0]) * (v2[2] - v3[2]);
-            double length_31 = (v3[0] - v1[0]) * (v3[0] - v1[0]) + (v3[1] - v1[1]) * (v3[1] - v1[1]) + (v3[0] - v1[0]) * (v3[2] - v1[2]);
+            // get edge_length, suqared
+            double length_12 = (v1[0] - v2[0]) * (v1[0] - v2[0]) + (v1[1] - v2[1]) * (v1[1] - v2[1]) + (v1[2] - v2[2]) * (v1[2] - v2[2]);
+            double length_23 = (v2[0] - v3[0]) * (v2[0] - v3[0]) + (v2[1] - v3[1]) * (v2[1] - v3[1]) + (v2[2] - v3[2]) * (v2[2] - v3[2]);
+            double length_31 = (v3[0] - v1[0]) * (v3[0] - v1[0]) + (v3[1] - v1[1]) * (v3[1] - v1[1]) + (v3[2] - v1[2]) * (v3[2] - v1[2]);
             edge_length.push_back(length_12);
             edge_length.push_back(length_23);
             edge_length.push_back(length_31);
@@ -77,7 +77,6 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
             }
             calc_cross_product(face_normal, v2, v3);
             normalize_3(face_normal);
-
 
             for(int i = 0; i < 3; i += 1){
                 m.normal[v1_idx * 3 + i] += face_normal[i];
@@ -153,19 +152,17 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
     dist.resize(m.vertex.size() / 3);
 
     // yes, write it and read it, that is close source software!
-    char* cmd = "C:\\spider\\tmp\\geodesics_lib\\bin\\GeoTest.exe C:\\spider\\tmp\\geodesics_lib\\bin\\eight.obj -a 0.5 -d -s ";
+    char* cmd = "C:\\Users\\AndrewHuang\\Documents\\\"Visual Studio 2015\"\\Projects\\Geodist\\Debug\\Geodist.exe ";
+    printf("%s\n", cmd);
+    system(cmd);
+
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
-    	if(i % 1 == 0){
+    	if(i % 100 == 0){
     		std::cout << i << std::endl;
 		}
-        char cmd_now[1024] = {};
-        sprintf(cmd_now, "%s%d\n", cmd, i);
-        printf("%s\n", cmd_now);
-        system(cmd_now);
-
         std::ifstream in;
-        sprintf(cmd_now, "%s%d%s", "C:\\spider\\tmp\\geodesics_lib\\bin\\eight.obj.", i, ".dist");
-        in.open(cmd_now, std::ios::in);
+        sprintf(cmd, "%s%d%s", "C:\\spider\\tmp\\geodesics_lib\\bin\\eight.obj.", i, ".dist");
+        in.open(cmd, std::ios::in);
 
         std::vector<double> distinct;
         distinct.resize(m.vertex.size() / 3);
@@ -179,7 +176,7 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
             distinct[j] /= 1 + 3 * dist[i][j];
         }
         std::sort(dist[i].begin(), dist[i].begin() + m.vertex.size() / 3);
-        int K = m.vertex.size() / 60;
+        int K = m.vertex.size() / 60; // 5% = 1 / 20
         double res = 0.0f;
         for(int j = 0; j < K; j += 1){
             res += distinct[j];
@@ -191,7 +188,7 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
     return ;
 }
 
-
+// what does it mean by "map back"?
 void map_back(char str_small[], char str_large[], std::vector<double> &dist_small, std::vector<double> &dist_large){
 
 // naive approach, O(n^2)
@@ -251,6 +248,7 @@ void calc_extremities(std::vector<std::vector<double> > &dist, std::vector<std::
     }
     ConvexHull3D(&p, &lenp, &l, &lenl, &leni, VERTICES);
     PrintList(p, lenp, l, lenl, leni);
+    free(p);
 
 // get extreme points
 
@@ -290,11 +288,8 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
 
     std::vector<double> tmp_for_sort = distinctness;
 
-    for(int i = 0; i < distinctness.size(); i += 1){
-    	std::cout << i << " " << distinctness[i] << std::endl;
-	}
-    sort(tmp_for_sort.begin(), tmp_for_sort.end());
-    double focus_threhold = tmp_for_sort[tmp_for_sort.size() * 4 / 5];
+    std::nth_element(tmp_for_sort.begin(), tmp_for_sort.begin() + tmp_for_sort.size() / 5, tmp_for_sort.end(), std::greater<double>());
+    double focus_threhold = tmp_for_sort[tmp_for_sort.size() / 5];
     // we treat it as a bool array from now on
     for(int i = 0; i < tmp_for_sort.size(); i += 1){
         if(distinctness[i] >= focus_threhold){
@@ -305,6 +300,9 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
     }
 
     std::vector<double> dist_a(distinctness.size());
+    double max_geodfoci = 0.0f;
+    std::vector<double> geodfoci(distinctness.size());
+    std::vector<double> d_foci(distinctness.size());
     for(int i = 0; i < distinctness.size(); i += 1){
         double min_geod = 1000.0f;
         double min_d_foci = 0.0f;
@@ -314,8 +312,16 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
                 min_geod = dist[i][j];
             }
         }
-        dist_a[i] = min_d_foci * exp(- min_geod * min_geod * 200);
-        std::cout << dist_a[i] << " ";
+        d_foci[i] = min_d_foci;
+        geodfoci[i] = min_geod;
+        max_geodfoci = std::max(max_geodfoci, geodfoci[i]);
+    }
+    // normalize geodfoci
+    for(int i = 0; i < distinctness.size(); i += 1){
+        geodfoci[i] /= max_geodfoci;
+    }
+    for(int i = 0; i < distinctness.size(); i += 1){
+        dist_a[i] = d_foci[i] * exp(- geodfoci[i] * geodfoci[i] * 200);
     }
     std::cout << std::endl;
 
@@ -323,17 +329,22 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
     std::vector<double> dist_e(distinctness.size());
     for(int i = 0; i < distinctness.size(); i += 1){
         double min_geod = 1000.0f;
-        double min_d_ext = 0.0f;
         for(int j = 0; j < extremity_points.size(); j += 1){
             if(dist[i][extremity_points[j]] < min_geod){
                 min_geod = dist[i][extremity_points[j]];
-                min_d_ext = distinctness[extremity_points[j]];
             }
         }
-        dist_e[i] = min_d_ext * exp(- min_geod * min_geod * 200);
-        std::cout << dist_e[i] << " ";
+        geodfoci[i] = min_geod;
+        max_geodfoci = std::max(max_geodfoci, geodfoci[i]);
     }
     std::cout << std::endl;
+    // normalize geodfoci
+    for(int i = 0; i < distinctness.size(); i += 1){
+        geodfoci[i] /= max_geodfoci;
+    }
+    for(int i = 0; i < distinctness.size(); i += 1){
+        dist_e[i] =exp(- geodfoci[i] * geodfoci[i] * 200);
+    }
 
     for(int i = 0; i < distinctness.size(); i += 1){
         distinctness[i] = std::max((distinctness[i] + dist_a[i]) / 2, dist_e[i]);
