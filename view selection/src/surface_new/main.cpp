@@ -153,36 +153,45 @@ void calc_distinctness(obj::ObjModel& m, std::vector<double>& distinctness, std:
 
     // yes, write it and read it, that is close source software!
     char* cmd = "C:\\Users\\AndrewHuang\\Documents\\\"Visual Studio 2015\"\\Projects\\Geodist\\Debug\\Geodist.exe ";
-    printf("%s\n", cmd);
+    std::cout << cmd << std::endl;
     system(cmd);
 
     for(int i = 0; i < m.vertex.size() / 3; i += 1){
-    	if(i % 100 == 0){
+    	if(i % 1 == 0){
     		std::cout << i << std::endl;
 		}
-        std::ifstream in;
-        sprintf(cmd, "%s%d%s", "C:\\spider\\tmp\\geodesics_lib\\bin\\eight.obj.", i, ".dist");
-        in.open(cmd, std::ios::in);
+        std::ifstream inn;
+        char path[1024] = {};
+        sprintf(path, "%s%d%s", "C:\\spider\\tmp\\geodesics_lib\\bin\\eight.obj.", i, ".dist");
+        std::cout << path << std::endl;
+        inn.open(path, std::ios::in);
 
+		std::cout << "malloc for space" << std::endl;
         std::vector<double> distinct;
         distinct.resize(m.vertex.size() / 3);
         dist[i].resize(m.vertex.size() / 3);
+        std::cout << "malloc end" << std::endl;
 
 // calc distinctness here! in this loop
 
         for(int j = 0; j < m.vertex.size() / 3; j += 1){
-            in >> dist[i][j];
+            inn >> dist[i][j];
             distinct[j] = calc_diffusion_dist(spin_image[i], spin_image[j]);
             distinct[j] /= 1 + 3 * dist[i][j];
+            //std::cout << distinct[j] << std::endl;
         }
-        std::sort(dist[i].begin(), dist[i].begin() + m.vertex.size() / 3);
-        int K = m.vertex.size() / 60; // 5% = 1 / 20
+        std::cout << "calc distinct for vertex " << i << "end." << std::endl;
+        std::sort(distinct.begin(), distinct.begin() + m.vertex.size() / 3);
+        double K = m.vertex.size() / 60.0f; // 5% = 1 / 20
         double res = 0.0f;
         for(int j = 0; j < K; j += 1){
             res += distinct[j];
         }
-        res = 1 - exp(-res / K);
+        std::cout << "res = " << res << std::endl;
+        res = 1.0f - exp(-res / K);
+        std::cout << "now, res = " << res << std::endl;
         distinctness[i] = res;
+        //std::cin >> res;
     }
 
     return ;
@@ -279,20 +288,28 @@ void calc_extremities(std::vector<std::vector<double> > &dist, std::vector<std::
             std::cout << "something must be wrong! in calc_distinctness(), while detecting distinctness";
         }
     }
+    std::cout << "extremity_points" << std::endl;
+    for(int i = 0; i < extremity_points.size(); i += 1){
+        std::cout << extremity_points[i] << " ";
+    }
+    std::cout << std::endl << "end." << std::endl;
 }
 
 void patch_association(std::vector<double> &distinctness, std::vector<int> &extremity_points, std::vector<std::vector<double> > &dist){
+    std::cout << "distinctness before patch_association()" << std::endl;
     for(int i = 0; i < distinctness.size(); i += 1){
     	std::cout << i << " " << distinctness[i] << std::endl;
 	}
+
 
     std::vector<double> tmp_for_sort = distinctness;
 
     std::nth_element(tmp_for_sort.begin(), tmp_for_sort.begin() + tmp_for_sort.size() / 5, tmp_for_sort.end(), std::greater<double>());
     double focus_threhold = tmp_for_sort[tmp_for_sort.size() / 5];
-    // we treat it as a bool array from now on
+    std::cout << "focus_threhold is " << focus_threhold << std::endl;
+    // we treat it as a boolean array from now on
     for(int i = 0; i < tmp_for_sort.size(); i += 1){
-        if(distinctness[i] >= focus_threhold){
+        if(distinctness[i] > focus_threhold){
             tmp_for_sort[i] = 1.0f;
         }else{
             tmp_for_sort[i] = 0.0f;
@@ -307,7 +324,7 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
         double min_geod = 1000.0f;
         double min_d_foci = 0.0f;
         for(int j = 0; j < distinctness.size(); j += 1){
-            if(tmp_for_sort[j] != 0 && dist[i][j] < min_geod){
+            if(tmp_for_sort[j] != 0.0f && dist[i][j] < min_geod){
                 min_d_foci = distinctness[j];
                 min_geod = dist[i][j];
             }
@@ -316,12 +333,17 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
         geodfoci[i] = min_geod;
         max_geodfoci = std::max(max_geodfoci, geodfoci[i]);
     }
+    std::cout << "max_geodfoci is " << max_geodfoci << std::endl;
     // normalize geodfoci
     for(int i = 0; i < distinctness.size(); i += 1){
         geodfoci[i] /= max_geodfoci;
     }
     for(int i = 0; i < distinctness.size(); i += 1){
         dist_a[i] = d_foci[i] * exp(- geodfoci[i] * geodfoci[i] * 200);
+    }
+    std::cout << "dist_a" << std::endl;
+    for(int i = 0; i < dist_a.size(); i += 1){
+        std::cout << dist_a[i] << std::endl;
     }
     std::cout << std::endl;
 
@@ -345,6 +367,11 @@ void patch_association(std::vector<double> &distinctness, std::vector<int> &extr
     for(int i = 0; i < distinctness.size(); i += 1){
         dist_e[i] =exp(- geodfoci[i] * geodfoci[i] * 200);
     }
+    std::cout << "dist_e" << std::endl;
+    for(int i = 0; i < dist_e.size(); i += 1){
+        std::cout << dist_e[i] << std::endl;
+    }
+    std::cout << std::endl;
 
     for(int i = 0; i < distinctness.size(); i += 1){
         distinctness[i] = std::max((distinctness[i] + dist_a[i]) / 2, dist_e[i]);

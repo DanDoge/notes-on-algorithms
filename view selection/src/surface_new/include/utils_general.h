@@ -22,8 +22,8 @@ double calc_diffusion_dist(std::vector<double> a, std::vector<double> b){
                     d[k][i][j] = 0.0f;
                     for(int ii = 0; ii < 16; ii += 1){
                         for(int jj = 0; jj < 16; jj += 1){
-                            int n = (i - ii) * (i - ii) + (j - jj) * (j - jj);
-                            d[k][i][j] += exp(-2 * n) * 2 / M_PI;
+                            int n = (i- ii) * (i- ii) + (j - jj) * (j - jj);
+                            d[k][i][j] += exp(-2 * n) * 2 / M_PI * d[k - 1][ii][jj];
                         }
                     }
                 }
