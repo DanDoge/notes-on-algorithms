@@ -5,6 +5,8 @@ view selection/EXP_MODELS
 view selection/res
 view selection/src/surface_of_interest/*.exe
 view selection/src/surface_of_interest/*.obj
+data_augmentation/models/
+data_augmentation/*.jpg
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
