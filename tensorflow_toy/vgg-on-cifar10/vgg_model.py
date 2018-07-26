@@ -7,10 +7,20 @@ import read_data
 def conv_relu(inputs, filters, kernel_size, stride, padding, scope_name):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         input_channels = inputs.shape[-1] # the last dim indicates n_channels
-        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer())
+        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01))
         biases = tf.get_variable('biase', [filters], initializer=tf.constant_initializer(0.0))
         conv = tf.nn.conv2d(inputs, kernel, strides=[1, stride, stride, 1], padding=padding)
     return tf.nn.relu(conv + biases, name=scope.name)
+
+def conv_bn_relu(inputs, filters, kernel_size, stride, padding, scope_name, phase):
+    with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
+        input_channels = inputs.shape[-1] # the last dim indicates n_channels
+        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01))
+        biases = tf.get_variable('biase', [filters], initializer=tf.constant_initializer(0.0))
+        conv = tf.nn.conv2d(inputs, kernel, strides=[1, stride, stride, 1], padding=padding)
+        bn = tf.nn.lrn(conv + biases, 4, bias=1.0, alpha=0.001/9.0, beta=0.75)
+    return tf.nn.relu(bn, name=scope.name)
+
 
 def maxpool(inputs, ksize, stride, padding='VALID', scope_name='pool'):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
@@ -20,7 +30,7 @@ def maxpool(inputs, ksize, stride, padding='VALID', scope_name='pool'):
 def fully_connected(inputs, out_dim, scope_name='fc'):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         in_dim = inputs.shape[-1]
-        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.truncated_normal_initializer())
+        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.contrib.layers.xavier_initializer())
         b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer(0.0))
         out = tf.matmul(inputs, w) + b
     return out
@@ -29,7 +39,7 @@ def fully_connected(inputs, out_dim, scope_name='fc'):
 class vgg_cifar(object):
     def __init__(self):
         self.learning_rate = 0.001
-        self.batch_size = 127 # better performance for cache on cpu...
+        self.batch_size = 32 # 128 -> <70%, 32 -> <80%, 16 -> 70%
         self.keep_prob = tf.constant(0.75)
         self.eps = tf.constant(0.00001)
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
@@ -37,7 +47,7 @@ class vgg_cifar(object):
         self.skip_step = 100
         self.n_test = 10000
         self.n_train = 50000
-        self.training = True
+        self.training = tf.constant(True, dtype=tf.bool)
 
     def get_data(self):
         with tf.name_scope('data'):
@@ -62,6 +72,20 @@ class vgg_cifar(object):
         conv6 = conv_relu(conv5, 64, 3, 1, 'SAME', 'conv6')
         pool3 = maxpool(conv6, 2, 2, 'VALID', 'pool3')
 
+        '''
+        conv1 = conv_bn_relu(self.img, 16, 3, 1, 'SAME', 'conv1', self.training)
+        conv2 = conv_bn_relu(conv1, 16, 3, 1, 'SAME', 'conv2', self.training)
+        pool1 = maxpool(conv2, 2, 2, 'VALID', 'pool1')
+
+        conv3 = conv_bn_relu(pool1, 32, 3, 1, 'SAME', 'conv3', self.training)
+        conv4 = conv_bn_relu(conv3, 32, 3, 1, 'SAME', 'conv4', self.training)
+        pool2 = maxpool(conv4, 2, 2, 'VALID', 'pool2')
+
+        conv5 = conv_bn_relu(pool2, 64, 3, 1, 'SAME', 'conv5', self.training)
+        conv6 = conv_bn_relu(conv5, 64, 3, 1, 'SAME', 'conv6', self.training)
+        pool3 = maxpool(conv6, 2, 2, 'VALID', 'pool3')
+        '''
+
         feature_dim = pool3.shape[1] * pool3.shape[2] * pool3.shape[3]
         pool3 = tf.reshape(pool3, [-1, feature_dim])
         fc1 = fully_connected(pool3, 1024, 'fc1')
@@ -70,12 +94,12 @@ class vgg_cifar(object):
 
     def loss(self):
         with tf.name_scope('loss'):
-            self.logits /= 1e10
-            softmax = tf.nn.softmax(self.logits)
-            cross_entropy = -tf.reduce_sum(self.label * tf.log(softmax), reduction_indices=[1])
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.label)
             self.loss = tf.reduce_mean(cross_entropy, name='loss')
 
     def optimize(self):
+        #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        #with tf.control_dependencies(update_ops):
         self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss, global_step=self.global_step)
 
     def eval(self):

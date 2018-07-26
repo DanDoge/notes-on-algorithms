@@ -1,13 +1,15 @@
 import tensorflow as tf
 import time
 import matplotlib as plt
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import read_data
 
 def conv_relu(inputs, filters, kernel_size, stride, padding, scope_name):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         input_channels = inputs.shape[-1] # the last dim indicates n_channels
-        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer())
+        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01))
         biases = tf.get_variable('biase', [filters], initializer=tf.constant_initializer(0.0))
         conv = tf.nn.conv2d(inputs, kernel, strides=[1, stride, stride, 1], padding=padding)
     return tf.nn.relu(conv + biases, name=scope.name)
@@ -20,7 +22,8 @@ def maxpool(inputs, ksize, stride, padding='VALID', scope_name='pool'):
 def fully_connected(inputs, out_dim, scope_name='fc'):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         in_dim = inputs.shape[-1]
-        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.truncated_normal_initializer())
+        #w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01))
+        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.contrib.layers.xavier_initializer())
         b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer(0.0))
         out = tf.matmul(inputs, w) + b
     return out
@@ -29,14 +32,14 @@ def fully_connected(inputs, out_dim, scope_name='fc'):
 class toy_model(object):
     def __init__(self):
         self.learning_rate = 0.001
-        self.batch_size = 127
+        self.batch_size = 32
         self.keep_prob = tf.constant(0.75)
         self.eps = tf.constant(0.00001)
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
         self.n_classes = 24
         self.skip_step = 1
-        self.n_test = 100 # do i need test data?
-        self.n_train = 1000
+        self.n_test = 600 # do i need test data?
+        self.n_train = 3000
         self.training = True
 
     def get_data(self):
@@ -71,7 +74,12 @@ class toy_model(object):
     def loss(self):
         with tf.name_scope('loss'):
             cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=self.labels, logits=self.logits)
-            self.loss = tf.reduce_mean(cross_entropy, name='loss') / 1e7
+            self.loss = tf.reduce_mean(cross_entropy, name='loss')
+
+            # try log_softmax, hope more numerically stable
+            # self.logits.shape ==> [batch_size, n_classes]
+            #log_softmax = tf.nn.log_softmax(self.logits, axis=-1)
+            #cross_entropy = -tf.reduce_mean(self.label * )
 
     def optimize(self):
         self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss, global_step=self.global_step)
@@ -150,4 +158,4 @@ class toy_model(object):
 if __name__ == '__main__':
     model = toy_model()
     model.build()
-    model.train(32)
+    model.train(50)

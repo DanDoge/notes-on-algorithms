@@ -28,7 +28,7 @@ permutation_rot_300_ud = permutation_rot_300[permutation_up_down]
 
 per = [permutation_none, permutation_up_down, permutation_rot_60, permutation_rot_180, permutation_rot_120, permutation_rot_240, permutation_rot_300, permutation_rot_60_ud, permutation_rot_120_ud, permutation_rot_180_ud, permutation_rot_240_ud, permutation_rot_300_ud]
 
-
+'''
 def get_data(batch_size, train_size, test_size):
     model_files = os.listdir(models_path)
     train_data = np.empty(shape=[0, 24, 64, 64])
@@ -83,6 +83,41 @@ def get_data(batch_size, train_size, test_size):
     test = tf.data.Dataset.from_tensor_slices(test).batch(batch_size)
 
     return train, test
+'''
+
+def get_data(batch_size, train_size, test_size):
+    print('loading data...')
+    data_total = np.empty(shape=[0, 24, 64, 64])
+    label_total = np.empty(shape=[0])
+    idx = 0
+    while data_total.shape[0] < train_size + test_size:
+        idx += 1
+        data_total = np.concatenate((data_total, np.load('data' + str(idx) + '.npy')), axis=0)
+        label_total = np.concatenate((label_total, np.load('label' + str(idx) + '.npy')), axis=0)
+        print('loading... ', data_total.shape, label_total.shape)
+
+    train_data = data_total[: train_size]
+    train_label = label_total[: train_size]
+    test_data = data_total[train_size : train_size + test_size]
+    test_label = label_total[train_size : train_size + test_size]
+    print('split data finished')
+
+    train_data = np.transpose(train_data, (0, 2, 3, 1)).astype(np.float32)
+    test_data = np.transpose(test_data, (0, 2, 3, 1)).astype(np.float32)
+    train_label = tf.one_hot(train_label, 24)
+    test_label = tf.one_hot(test_label, 24)
+    print('transform to tf data finished')
+
+
+    train = (train_data, train_label)
+    test = (test_data, test_label)
+    train = tf.data.Dataset.from_tensor_slices(train).shuffle(10000).batch(batch_size)
+    test = tf.data.Dataset.from_tensor_slices(test).batch(batch_size)
+    print('ready to train...')
+
+    return train, test
+
+
 
 if __name__ == '__main__':
     get_data(32, 2500, 500) # passed
