@@ -7,6 +7,13 @@ view selection/src/surface_of_interest/*.exe
 view selection/src/surface_of_interest/*.obj
 data_augmentation/models/
 data_augmentation/*.jpg
+*.exe
+
+toy_on_bench/**/*.pyc
+toy_on_bench/data_zipped
+toy_on_bench/depth_maps/**/*.jpg
+toy_on_bench/models_augmented
+toy_on_bench/models_origin
 
 ## Core latex/pdflatex auxiliary files:
 *.aux

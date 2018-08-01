@@ -12,13 +12,17 @@ def conv_relu(inputs, filters, kernel_size, stride, padding, scope_name):
         conv = tf.nn.conv2d(inputs, kernel, strides=[1, stride, stride, 1], padding=padding)
     return tf.nn.relu(conv + biases, name=scope.name)
 
-def conv_bn_relu(inputs, filters, kernel_size, stride, padding, scope_name, phase):
+def conv_bn_relu(inputs, filters, kernel_size, stride, padding, scope_name):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         input_channels = inputs.shape[-1] # the last dim indicates n_channels
-        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01))
+        kernel = tf.get_variable('kernel', [kernel_size, kernel_size, input_channels, filters], initializer=tf.truncated_normal_initializer(mean=0.0, stddev=0.01), regularizer=tf.contrib.layers.l2_regularizer(scale=0.0002))
         biases = tf.get_variable('biase', [filters], initializer=tf.constant_initializer(0.0))
         conv = tf.nn.conv2d(inputs, kernel, strides=[1, stride, stride, 1], padding=padding)
-        bn = tf.nn.lrn(conv + biases, 4, bias=1.0, alpha=0.001/9.0, beta=0.75)
+
+        mean, variance = tf.nn.moments(conv + biases, axes=[0, 1, 2])
+        beta = tf.get_variable('beta', filters, tf.float32, initializer=tf.constant_initializer(0.0, tf.float32))
+        gamma = tf.get_variable('gamma', filters, tf.float32, initializer=tf.constant_initializer(1.0, tf.float32))
+        bn = tf.nn.batch_normalization(conv + biases, mean, variance, beta, gamma, 0.001)
     return tf.nn.relu(bn, name=scope.name)
 
 
@@ -30,8 +34,8 @@ def maxpool(inputs, ksize, stride, padding='VALID', scope_name='pool'):
 def fully_connected(inputs, out_dim, scope_name='fc'):
     with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
         in_dim = inputs.shape[-1]
-        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.contrib.layers.xavier_initializer())
-        b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer(0.0))
+        w = tf.get_variable('weights', [in_dim, out_dim], initializer=tf.contrib.layers.xavier_initializer(), regularizer=tf.contrib.layers.l2_regularizer(scale=0.0002))
+        b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer(0.0), regularizer=tf.contrib.layers.l2_regularizer(scale=0.0002))
         out = tf.matmul(inputs, w) + b
     return out
 
@@ -44,7 +48,7 @@ class vgg_cifar(object):
         self.eps = tf.constant(0.00001)
         self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
         self.n_classes = 10
-        self.skip_step = 100
+        self.skip_step = 1
         self.n_test = 10000
         self.n_train = 50000
         self.training = tf.constant(True, dtype=tf.bool)
@@ -60,47 +64,80 @@ class vgg_cifar(object):
             self.test_init = iterator.make_initializer(test_data)
 
     def inference(self):
-        conv1 = conv_relu(self.img, 16, 3, 1, 'SAME', 'conv1')
-        conv2 = conv_relu(conv1, 16, 3, 1, 'SAME', 'conv2')
+        '''
+        conv1 = conv_relu(self.img, 64, 3, 1, 'SAME', 'conv1')
+        conv2 = conv_relu(conv1, 64, 3, 1, 'SAME', 'conv2')
         pool1 = maxpool(conv2, 2, 2, 'VALID', 'pool1')
 
-        conv3 = conv_relu(pool1, 32, 3, 1, 'SAME', 'conv3')
-        conv4 = conv_relu(conv3, 32, 3, 1, 'SAME', 'conv4')
+        conv3 = conv_relu(pool1, 128, 3, 1, 'SAME', 'conv3')
+        conv4 = conv_relu(conv3, 128, 3, 1, 'SAME', 'conv4')
         pool2 = maxpool(conv4, 2, 2, 'VALID', 'pool2')
 
-        conv5 = conv_relu(pool2, 64, 3, 1, 'SAME', 'conv5')
-        conv6 = conv_relu(conv5, 64, 3, 1, 'SAME', 'conv6')
-        pool3 = maxpool(conv6, 2, 2, 'VALID', 'pool3')
+        conv5 = conv_relu(pool2, 256, 3, 1, 'SAME', 'conv5')
+        conv6 = conv_relu(conv5, 256, 3, 1, 'SAME', 'conv6')
+        conv7 = conv_relu(conv6, 256, 3, 1, 'SAME', 'conv7')
+        pool3 = maxpool(conv7, 2, 2, 'VALID', 'pool3')
 
+        conv8 = conv_relu(pool3, 512, 3, 1, 'SAME', 'conv8')
+        conv9 = conv_relu(conv8, 512, 3, 1, 'SAME', 'conv9')
+        conv10 = conv_relu(conv9, 512, 3, 1, 'SAME', 'conv10')
+        pool4 = maxpool(conv10, 2, 2, 'VALID', 'pool4')
+
+        conv11 = conv_relu(pool4, 512, 3, 1, 'SAME', 'conv11')
+        conv12 = conv_relu(conv11, 512, 3, 1, 'SAME', 'conv12')
+        conv13 = conv_relu(conv12, 512, 3, 1, 'SAME', 'conv13')
+        pool5 = maxpool(conv13, 2, 2, 'VALID', 'pool5')
         '''
-        conv1 = conv_bn_relu(self.img, 16, 3, 1, 'SAME', 'conv1', self.training)
-        conv2 = conv_bn_relu(conv1, 16, 3, 1, 'SAME', 'conv2', self.training)
+
+
+        conv1 = conv_bn_relu(self.img, 64, 3, 1, 'SAME', 'conv1')
+        conv2 = conv_bn_relu(conv1, 64, 3, 1, 'SAME', 'conv2')
         pool1 = maxpool(conv2, 2, 2, 'VALID', 'pool1')
 
-        conv3 = conv_bn_relu(pool1, 32, 3, 1, 'SAME', 'conv3', self.training)
-        conv4 = conv_bn_relu(conv3, 32, 3, 1, 'SAME', 'conv4', self.training)
+        conv3 = conv_bn_relu(pool1, 128, 3, 1, 'SAME', 'conv3')
+        conv4 = conv_bn_relu(conv3, 128, 3, 1, 'SAME', 'conv4')
         pool2 = maxpool(conv4, 2, 2, 'VALID', 'pool2')
 
-        conv5 = conv_bn_relu(pool2, 64, 3, 1, 'SAME', 'conv5', self.training)
-        conv6 = conv_bn_relu(conv5, 64, 3, 1, 'SAME', 'conv6', self.training)
-        pool3 = maxpool(conv6, 2, 2, 'VALID', 'pool3')
-        '''
+        conv5 = conv_bn_relu(pool2, 256, 3, 1, 'SAME', 'conv5')
+        conv6 = conv_bn_relu(conv5, 256, 3, 1, 'SAME', 'conv6')
+        conv7 = conv_bn_relu(conv6, 256, 3, 1, 'SAME', 'conv7')
+        pool3 = maxpool(conv7, 2, 2, 'VALID', 'pool3')
 
-        feature_dim = pool3.shape[1] * pool3.shape[2] * pool3.shape[3]
-        pool3 = tf.reshape(pool3, [-1, feature_dim])
-        fc1 = fully_connected(pool3, 1024, 'fc1')
-        dropout =tf.nn.dropout(tf.nn.relu(fc1), self.keep_prob, name='relu_dropout1')
-        self.logits = fully_connected(dropout, self.n_classes, 'logits')
+        conv8 = conv_bn_relu(pool3, 512, 3, 1, 'SAME', 'conv8')
+        conv9 = conv_bn_relu(conv8, 512, 3, 1, 'SAME', 'conv9')
+        conv10 = conv_bn_relu(conv9, 512, 3, 1, 'SAME', 'conv10')
+        pool4 = maxpool(conv10, 2, 2, 'VALID', 'pool4')
+
+        conv11 = conv_bn_relu(pool4, 512, 3, 1, 'SAME', 'conv11')
+        conv12 = conv_bn_relu(conv11, 512, 3, 1, 'SAME', 'conv12')
+        conv13 = conv_bn_relu(conv12, 512, 3, 1, 'SAME', 'conv13')
+        pool5 = maxpool(conv13, 2, 2, 'VALID', 'pool5')
+
+
+        feature_dim = pool5.shape[1] * pool5.shape[2] * pool5.shape[3]
+        pool5 = tf.reshape(pool5, [-1, feature_dim])
+        fc1 = fully_connected(pool5, 4096, 'fc1')
+        dropout1 =tf.nn.dropout(tf.nn.relu(fc1), self.keep_prob, name='relu_dropout1')
+        fc2 = fully_connected(fc1, 4096, 'fc2')
+        dropout2 = tf.nn.dropout(tf.nn.relu(fc2), self.keep_prob, name='relu_dropout2')
+        fc3 = fully_connected(dropout2, 1000, 'fc3')
+        self.logits = fully_connected(fc3, self.n_classes, 'logits')
 
     def loss(self):
         with tf.name_scope('loss'):
             cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.label)
             self.loss = tf.reduce_mean(cross_entropy, name='loss')
+            self.regu_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+            self.full_loss = tf.add_n([self.loss] + self.regu_loss)
 
     def optimize(self):
         #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         #with tf.control_dependencies(update_ops):
-        self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss, global_step=self.global_step)
+        #self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss, global_step=self.global_step)
+        ema = tf.train.ExponentialMovingAverage(0.99, self.global_step)
+        self.train_ema_op = ema.apply([self.full_loss, self.loss])
+        self.train_op = tf.train.MomentumOptimizer(learning_rate=self.learning_rate, momentum=0.9).minimize(self.full_loss, global_step=self.global_step)
+
 
     def eval(self):
         with tf.name_scope('perdict'):
@@ -123,10 +160,10 @@ class vgg_cifar(object):
         n_batches = 0
         try:
             while True:
-                _, l = sess.run([self.opt, self.loss])
+                _, _, l, f_l = sess.run([self.train_op, self.train_ema_op, self.loss, self.full_loss])
                 #print(l)
                 if (step + 1) % self.skip_step == 0:
-                    print('Loss at step {0}: {1}'.format(step + 1, l))
+                    print('Loss at step {0}: {1}, {2}'.format(step + 1, l, f_l))
                 step += 1
                 tot_loss += l
                 n_batches += 1
