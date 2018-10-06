@@ -1,0 +1,5 @@
+3600 * 256 * 256 * 4 * 66 // 3600 pics 256 * 256 res float32 66 channels ==> 58G ==> batch_size 32
+64 * 64 ==> test acc 88%, train acc 97%， 多class的物体的视角估计
+66面体对称性？ 正十二面体 正二十四面体..对称性？
+vgg on cifar still <80%, 一段时间之后loss nan, batch norm加上不优化(我的问题)
+视角估计 有人做了360 * 360 * 180分类?
