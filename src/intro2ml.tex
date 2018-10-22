@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proof}{Proof}[section]
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{DanDoge}
+\lhead{Brief intro to ML}
+\rfoot{Page \thepage}
+\cfoot{latest version: 2018/10/21}
+
+\title{Brief intro to ML}
+\date{2018-10-21}
+\author{DanDoge}
+
+\begin{document}
+\section{Intro and Declaration}
+  This note is all based on a series of blogs from Chen Haoran, whose personnal blog is chrer.com. I may delete this blog if I break any lisence. Best regrads to Chen and his girlfriend, and may they be together forever.
+
+\section{Concept, history and future of ML}
+  \subsection{concept}
+    \paragraph{} Machine learning is about designing an algorithm which \"learns\" how to design a algorithm, kind of a recurrence definition, especially when such an algorithm cannot/is hard to be programmed explicitly.
+    \paragraph{} What does a machine learn from? Dataset! A typical dataset consists of several attributes, which may be regarded as a attribute space. And out of these data, we want to predict a label, and we prefer some models that generlize well to empericial data, the real world, not only to the dataset, which is merely a sample/subset of empreical data.
+    \paragraph{} Ml can be categorized into four types: supervised, unsupevised, semisupervised and reinforcement.
+      \begin{itemize}
+        \item Supervised: each entry has its own label given, can be further split into two classes: categorization and regression, depends on whether the label is discrete or continous
+        \item Unsupervised: no labels are given
+        \item Semisupervised: simply a mix of above
+        \item RL: no label....but we have a reward function
+      \end{itemize}
+  \subsection{history and application}
+    \paragraph{} from inference to knowledge to ML, boring.
+    \paragraph{} google news, auto drive, ads
+
+\section{Linear regression and Gradient descent}
+  \paragraph{} Modeling first, how to encode these features? A real number or one-hot encoding? And better normalize the features to $[-1, 1]$
+  \paragraph{} Well, linear regerssion has a formular, and is actually easy to obtain.
+  \begin{equation}
+    y = (A^{T}A)^{-1}A^{T}x
+  \end{equation}
+  \paragraph{} Gradient descent is like go down a hill, we simply look around, find a direction which goes down fastest, and just go that way, repeat until we get to the minimum. How large a step should be? Learning rate
+
+\section{Logistics and Problems in Linear Models}
+  \paragraph{} How to map a continous value into $\{0, 1\}$, suppose we are dealing with a binary classification problem? Introduce sigmoid function
+  \begin{equation}
+    y = \frac{1}{1 + e^{-x}}
+  \end{equation}
+  , and set a threhold of $0.5$. Notice that this function is not convex (and not convave, neither), introduce new cost functions:
+  \begin{equation}
+    Cost(h_{w}(x), y) = -\log (h_{w}(x)), y = 1 \quad
+    Cost(h_{w}(x), y) = -\log (1 - h_{w}(x)), y = 0
+  \end{equation}
+  , and a regularization term like $\sum_{i=1}^{m}\theta_{i}^{2}$, may reduce overfit
+
+\section{Decision Tree}
+  refer to \textit{ISLR}, boring. Information Entropy, sounds interesting, search later.
+
+\section{Intro to Neural Network}
+  \paragraph{} Lots of basic elements, which connect and interact with each other. What is so-called connect and interact?
+  \begin{equation}
+    y = f(\sum_{1}^{n}w_{i}x_{i} - \theta)
+  \end{equation}
+  , where the $f$ here is called activate function.
+  \paragraph{} Perceptrons and deeper perceptrons, inference and back propogation. Some theoritical statements.
+
+\section{Naive and Semi-naive Bayesian}
+  \paragraph{} Not directly estimate the probility of $x$ in class $c$, but estimate the probility of one element in class $c$ that turns out to be like $x$. MLE, and laplacian smoothing
+  \paragraph{} If we allow some of attributes depends on other attributes, we obtain a semi-naive Bayesian model.
+
+\section{Integrate Learning}
+  \paragraph{} Keep a set of week learners(?), each one is good enough and different. Refer to \textit{ISLR}, I remember its in Chap. Desition Trees, and review this!
+  \paragraph{} omit Theory of IL, Abnormal Detection
+
+\section{Cluster Analysis}
+  \paragraph{} refer to $KNN$, hope I still remember this...and can be generlize to Gausian mixed model
+
+\section{A Paper}
+  \paragraph{} momomo...doushidalao....yijingyoupaperle
+
+\section{Support Vector Machine}
+  \paragraph{Please refer to \textit{ISLR}} from max margin classifier, to SVM, soft margin
+
+\section{Intro to Tensorflow}
+  \paragraph{} Well, eventually, we step into engineering and coding now...some common mistakes noobs make. Some lectures by Mr. Andrew Ng.
+  \paragraph{} And some notes about RNN
+\end{document}
